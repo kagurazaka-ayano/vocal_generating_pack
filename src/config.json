@@ -1,0 +1,10 @@
+{
+	"model_root": {
+		"demucs": "../files/models/demucs",
+		"so-vits": "../files/models/so-vits"
+	},
+	"presets_root": {
+		"demucs": "../files/presets/demucs",
+		"so-vits": "../files/presets/so-vits"
+	}
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="song-generation-pack" uploadOnCheckin="3bc27309-e814-4b55-ab86-a4bcdc3db419" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false" compareModeInSync="TEXT" showEqualInSync="true" showDifferentInSync="false" showNewOnSourceInSync="false" showNewOnTargetInSync="false">
+    <option name="confirmBeforeUploading" value="false" />
+    <serverData>
+      <paths name="song-generation-pack">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/Development/song_generation_pack" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="song-generation-pack-remote">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/Development/song_generation_pack" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myUploadOnCheckinName" value="song-generation-pack" />
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
