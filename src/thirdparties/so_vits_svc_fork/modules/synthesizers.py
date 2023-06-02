@@ -5,18 +5,17 @@ from typing import Any, Literal, Sequence
 import torch
 from torch import nn
 
-import so_vits_svc_fork.f0
-from so_vits_svc_fork.f0 import f0_to_coarse
-from so_vits_svc_fork.modules import commons as commons
-from so_vits_svc_fork.modules.decoders.f0 import F0Decoder
-from so_vits_svc_fork.modules.decoders.hifigan import NSFHifiGANGenerator
-from so_vits_svc_fork.modules.decoders.mb_istft import (
+from thirdparties.so_vits_svc_fork.f0 import f0_to_coarse
+from thirdparties.so_vits_svc_fork.modules import commons as commons
+from thirdparties.so_vits_svc_fork.modules.decoders.f0 import F0Decoder
+from thirdparties.so_vits_svc_fork.modules.decoders.hifigan import NSFHifiGANGenerator
+from thirdparties.so_vits_svc_fork.modules.decoders.mb_istft import (
     Multiband_iSTFT_Generator,
     Multistream_iSTFT_Generator,
     iSTFT_Generator,
 )
-from so_vits_svc_fork.modules.encoders import Encoder, TextEncoder
-from so_vits_svc_fork.modules.flows import ResidualCouplingBlock
+from thirdparties.so_vits_svc_fork.modules.encoders import Encoder, TextEncoder
+from thirdparties.so_vits_svc_fork.modules.flows import ResidualCouplingBlock
 
 LOG = getLogger(__name__)
 
@@ -173,7 +172,7 @@ class SynthesizerTrn(nn.Module):
 
         # f0 predict
         lf0 = 2595.0 * torch.log10(1.0 + f0.unsqueeze(1) / 700.0) / 500
-        norm_lf0 = so_vits_svc_fork.f0.normalize_f0(lf0, x_mask, uv)
+        norm_lf0 = thirdparties.so_vits_svc_fork.f0.normalize_f0(lf0, x_mask, uv)
         pred_lf0 = self.f0_decoder(x, norm_lf0, x_mask, spk_emb=g)
 
         # encoder
@@ -214,7 +213,7 @@ class SynthesizerTrn(nn.Module):
 
         if predict_f0:
             lf0 = 2595.0 * torch.log10(1.0 + f0.unsqueeze(1) / 700.0) / 500
-            norm_lf0 = so_vits_svc_fork.f0.normalize_f0(
+            norm_lf0 = thirdparties.so_vits_svc_fork.f0.normalize_f0(
                 lf0, x_mask, uv, random_scale=False
             )
             pred_lf0 = self.f0_decoder(x, norm_lf0, x_mask, spk_emb=g)

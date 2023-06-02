@@ -23,7 +23,7 @@ from numpy import ndarray
 from tqdm import tqdm
 from transformers import HubertModel
 
-from so_vits_svc_fork.hparams import HParams
+from thirdparties.so_vits_svc_fork.hparams import HParams
 
 LOG = getLogger(__name__)
 HUBERT_SAMPLING_RATE = 16000

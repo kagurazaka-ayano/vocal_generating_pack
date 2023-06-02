@@ -1,14 +1,4 @@
-import binascii
-import struct
-import base64
-import json
-import os
-from Crypto.Cipher import AES
-from demucs import separate
-from torch.cuda import is_available
-from so_vits_svc_fork.inference.main import infer
-from pathlib import Path
-from pydub import AudioSegment
+from headers import *
 
 
 # code from https://github.com/QCloudHao/ncmdump/blob/master/ncmdump.py

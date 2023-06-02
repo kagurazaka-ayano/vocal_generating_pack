@@ -4,8 +4,8 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from so_vits_svc_fork.modules import commons
-from so_vits_svc_fork.modules.modules import LayerNorm
+from thirdparties.so_vits_svc_fork.modules import commons
+from thirdparties.so_vits_svc_fork.modules.modules import LayerNorm
 
 
 class FFT(nn.Module):

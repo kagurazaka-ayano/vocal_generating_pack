@@ -10,7 +10,7 @@ from cm_time import timer
 from numpy import dtype, float32, ndarray
 from torch import FloatTensor, Tensor
 
-from so_vits_svc_fork.utils import get_optimal_device
+from thirdparties.so_vits_svc_fork.utils import get_optimal_device
 
 LOG = getLogger(__name__)
 

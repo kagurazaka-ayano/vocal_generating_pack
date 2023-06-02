@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="song-generation-pack" uploadOnCheckin="3bc27309-e814-4b55-ab86-a4bcdc3db419" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false" compareModeInSync="TEXT" showEqualInSync="true" showDifferentInSync="false" showNewOnSourceInSync="false" showNewOnTargetInSync="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="song-generation-pack-remote" uploadOnCheckin="3bc27309-e814-4b55-ab86-a4bcdc3db419" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false" compareModeInSync="TEXT" showDifferentInSync="false" showNewOnTargetInSync="false" showExcludedInSync="true">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
       <paths name="song-generation-pack">
@@ -13,7 +13,7 @@
       <paths name="song-generation-pack-remote">
         <serverdata>
           <mappings>
-            <mapping deploy="/Development/song_generation_pack" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/Development/song_generating_pack" local="$PROJECT_DIR$/../song_generating_pack" web="/" />
           </mappings>
         </serverdata>
       </paths>

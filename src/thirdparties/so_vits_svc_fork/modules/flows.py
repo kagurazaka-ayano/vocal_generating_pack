@@ -1,6 +1,6 @@
 from torch import nn
 
-from so_vits_svc_fork.modules import modules as modules
+from thirdparties.so_vits_svc_fork.modules import modules as modules
 
 
 class ResidualCouplingBlock(nn.Module):

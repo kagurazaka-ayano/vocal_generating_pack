@@ -1,9 +1,9 @@
 import torch
 from torch import nn
 
-from so_vits_svc_fork.modules import attentions as attentions
-from so_vits_svc_fork.modules import commons as commons
-from so_vits_svc_fork.modules import modules as modules
+from thirdparties.so_vits_svc_fork.modules import attentions as attentions
+from thirdparties.so_vits_svc_fork.modules import commons as commons
+from thirdparties.so_vits_svc_fork.modules import modules as modules
 
 
 class SpeakerEncoder(torch.nn.Module):

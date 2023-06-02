@@ -19,9 +19,8 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 
-import so_vits_svc_fork.f0
-import so_vits_svc_fork.modules.commons as commons
-import so_vits_svc_fork.utils
+import thirdparties.so_vits_svc_fork.modules.commons as commons
+import thirdparties.so_vits_svc_fork.utils
 
 from . import utils
 from .dataset import TextAudioCollate, TextAudioDataset
@@ -489,11 +488,11 @@ class VitsLightning(pl.LightningModule):
                     "all/mel": utils.plot_spectrogram_to_numpy(
                         mel[0].data.cpu().float().numpy()
                     ),
-                    "all/lf0": so_vits_svc_fork.utils.plot_data_to_numpy(
+                    "all/lf0": thirdparties.so_vits_svc_fork.utils.plot_data_to_numpy(
                         lf0[0, 0, :].cpu().float().numpy(),
                         pred_lf0[0, 0, :].detach().cpu().float().numpy(),
                     ),
-                    "all/norm_lf0": so_vits_svc_fork.utils.plot_data_to_numpy(
+                    "all/norm_lf0": thirdparties.so_vits_svc_fork.utils.plot_data_to_numpy(
                         lf0[0, 0, :].cpu().float().numpy(),
                         norm_lf0[0, 0, :].detach().cpu().float().numpy(),
                     ),

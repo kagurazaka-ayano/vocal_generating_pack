@@ -720,7 +720,7 @@ def main():
                 #     continue
 
                 try:
-                    from so_vits_svc_fork.inference.main import infer
+                    from thirdparties.so_vits_svc_fork.inference.main import infer
 
                     LOG.info("Starting inference...")
                     window["infer"].update(disabled=True)
@@ -769,7 +769,7 @@ def main():
                 _, _, input_device_indices, output_device_indices = get_devices(
                     update=False
                 )
-                from so_vits_svc_fork.inference.main import realtime
+                from thirdparties.so_vits_svc_fork.inference.main import realtime
 
                 if future:
                     LOG.info("Canceling previous task")
@@ -821,7 +821,7 @@ def main():
             elif event == "onnx_export":
                 try:
                     raise NotImplementedError("ONNX export is not implemented yet.")
-                    from so_vits_svc_fork.modules.onnx._export import onnx_export
+                    from thirdparties.so_vits_svc_fork.modules import onnx_export
 
                     onnx_export(
                         input_path=Path(values["model_path"]),

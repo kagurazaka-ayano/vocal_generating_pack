@@ -9,8 +9,8 @@ from typing import Literal
 import click
 import torch
 
-from so_vits_svc_fork import __version__
-from so_vits_svc_fork.utils import get_optimal_device
+from thirdparties.so_vits_svc_fork import __version__
+from thirdparties.so_vits_svc_fork.utils import get_optimal_device
 
 LOG = getLogger(__name__)
 
@@ -249,7 +249,7 @@ def infer(
     device: str | torch.device = get_optimal_device(),
 ):
     """Inference"""
-    from so_vits_svc_fork.inference.main import infer
+    from thirdparties.so_vits_svc_fork.inference.main import infer
 
     if not auto_predict_f0:
         LOG.warning(
@@ -414,7 +414,7 @@ def vc(
     passthrough_original: bool = False,
 ) -> None:
     """Realtime inference from microphone"""
-    from so_vits_svc_fork.inference.main import realtime
+    from thirdparties.so_vits_svc_fork.inference.main import realtime
 
     if auto_predict_f0:
         LOG.warning(
@@ -502,7 +502,7 @@ def pre_resample(
     hop_seconds: float,
 ) -> None:
     """Preprocessing part 1: resample"""
-    from so_vits_svc_fork.preprocessing.preprocess_resample import preprocess_resample
+    from thirdparties.so_vits_svc_fork.preprocessing.preprocess_resample import preprocess_resample
 
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
@@ -517,7 +517,7 @@ def pre_resample(
     )
 
 
-from so_vits_svc_fork.preprocessing.preprocess_flist_config import CONFIG_TEMPLATE_DIR
+from thirdparties.so_vits_svc_fork.preprocessing.preprocess_flist_config import CONFIG_TEMPLATE_DIR
 
 
 @cli.command()
@@ -556,7 +556,7 @@ def pre_config(
     config_type: str,
 ):
     """Preprocessing part 2: config"""
-    from so_vits_svc_fork.preprocessing.preprocess_flist_config import preprocess_config
+    from thirdparties.so_vits_svc_fork.preprocessing.preprocess_flist_config import preprocess_config
 
     input_dir = Path(input_dir)
     filelist_path = Path(filelist_path)
@@ -615,7 +615,7 @@ def pre_hubert(
 ) -> None:
     """Preprocessing part 3: hubert
     If the HuBERT model is not found, it will be downloaded automatically."""
-    from so_vits_svc_fork.preprocessing.preprocess_hubert_f0 import preprocess_hubert_f0
+    from thirdparties.so_vits_svc_fork.preprocessing.preprocess_hubert_f0 import preprocess_hubert_f0
 
     input_dir = Path(input_dir)
     config_path = Path(config_path)
@@ -681,7 +681,7 @@ def pre_sd(
 
     if max_speakers == 1:
         LOG.warning("Consider using pre-split if max_speakers == 1")
-    from so_vits_svc_fork.preprocessing.preprocess_speaker_diarization import (
+    from thirdparties.so_vits_svc_fork.preprocessing.preprocess_speaker_diarization import (
         preprocess_speaker_diarization,
     )
 
@@ -734,7 +734,7 @@ def pre_split(
     sr: int,
 ):
     """Split audio files into multiple files"""
-    from so_vits_svc_fork.preprocessing.preprocess_split import preprocess_split
+    from thirdparties.so_vits_svc_fork.preprocessing.preprocess_split import preprocess_split
 
     preprocess_split(
         input_dir=input_dir,
@@ -775,7 +775,7 @@ def pre_classify(
     create_new: bool,
 ) -> None:
     """Classify multiple audio files into multiple files"""
-    from so_vits_svc_fork.preprocessing.preprocess_classify import preprocess_classify
+    from thirdparties.so_vits_svc_fork.preprocessing.preprocess_classify import preprocess_classify
 
     if output_dir is None:
         output_dir = input_dir
@@ -846,7 +846,7 @@ def onnx(
         output_path = output_path / (input_path.stem + ".onnx")
     config_path = Path(config_path)
     device_ = torch.device(device)
-    from so_vits_svc_fork.modules.onnx._export import onnx_export
+    from thirdparties.so_vits_svc_fork.modules import onnx_export
 
     onnx_export(
         input_path=input_path,

@@ -4,8 +4,8 @@ from torch.nn import AvgPool1d, Conv1d, Conv2d
 from torch.nn import functional as F
 from torch.nn.utils import spectral_norm, weight_norm
 
-from so_vits_svc_fork.modules import modules as modules
-from so_vits_svc_fork.modules.commons import get_padding
+from thirdparties.so_vits_svc_fork.modules import modules as modules
+from thirdparties.so_vits_svc_fork.modules.commons import get_padding
 
 
 class DiscriminatorP(torch.nn.Module):
