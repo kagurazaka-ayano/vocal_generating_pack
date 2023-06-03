@@ -1,8 +1,10 @@
 # 基于demucs和so-vits-svc的语音分离与生成
 
 ## 功能
+- 网易云音乐ncm格式解包
 - 语音分离
 - 语音生成
+- 合并音频
 
 ## 安装
 1. 安装一个包管理器
@@ -53,3 +55,11 @@
 - [ ] 集成模型训练
 - [ ] Qt GUI
 - [ ] WebUI
+- [ ] 自动下载模型
+- [ ] 插件系统
+
+## 借物表
+- [demucs](https://github.com/facebookresearch/demucs)
+- [so-vits-svc-fork](https://github.com/voicepaw/so-vits-svc-fork)
+- [ncm解包器](https://github.com/QCloudHao/ncmdump)
+- [纳西妲so-vits-svc模型](https://huggingface.co/kaze-mio/so-vits-genshin)
