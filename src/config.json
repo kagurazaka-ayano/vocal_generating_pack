@@ -1,40 +1,14 @@
 {
 	"model_root": {
 		"demucs": "../files/models/demucs",
-		"so-vits": "../files/models/so-vits"
+		"so-vits": "../files/models/so-vits",
+		"pretrained": "../files/models/pretrained"
 	},
 	"preset_root": {
 		"demucs": "../files/presets/demucs",
 		"so-vits": "../files/presets/so-vits"
 	},
-	"remote_resources":{
-		"demucs": {
-			"model": {
-				"hdemucs_mmi": [
-					"https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/75fc33f5-1941ce65.th",
-					"https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/hdemucs_mmi.yaml"
-				],
-				"htdemucs_6s": [
-					"https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/5c90dfd2-34c22ccb.th",
-					"https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/htdemucs_6s.yaml"
-				]
-			}
-		},
-		"so-vits": {
-			"model": {
-				"Eren Yeager": {
-					"link": "https://cowtransfer.com/s/afc512a8f1a342"
-				},
-				"Azuma Seren": {
-					"link": "https://cowtransfer.com/s/f35da9843a1641"
-				},
-				"saya": {
-					"link": "https://huggingface.co/fnx/so-vits-svc-4.0-ru-saya/tree/main"
-				},
-				"America": {
-					"link": "https://huggingface.co/Nardicality/so-vits-svc-4.0-models/tree/main"
-				}
-			}
-		}
-	}
+	"dataset": "../files/datasets",
+	"output": "../files/output",
+	"sources": "../files/sources.json"
 }

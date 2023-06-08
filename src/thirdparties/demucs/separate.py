@@ -18,7 +18,6 @@ from .audio import AudioFile, convert_audio, save_audio
 from .htdemucs import HTDemucs
 from .pretrained import get_model_from_args, add_model_flags, ModelLoadingError
 
-from json import load
 
 def load_track(track, audio_channels, samplerate):
     errors = {}
@@ -64,9 +63,9 @@ def get_parser():
                         help="Folder where to put extracted tracks. A subfolder "
                         "with the model name will be created.")
     parser.add_argument("--filename",
-                        default="{track}/{stem}.{ext}",
+                        default="{stem}.{ext}",
                         help="Set the name of output file. \n"
-                        'Use "{track}", "{trackext}", "{stem}", "{ext}" to use '
+                        'Use "{trackext}", "{stem}", "{ext}" to use '
                         "variables of track name without extension, track extension, "
                         "stem name and default output file extension. \n"
                         'Default is "{track}/{stem}.{ext}".')
@@ -75,7 +74,7 @@ def get_parser():
                         default="cuda" if th.cuda.is_available() else "cpu",
                         help="Device to use, default is cuda if available else cpu")
     parser.add_argument("--shifts",
-                        default=0,
+                        default=1,
                         type=int,
                         help="Number of random shifts for equivariant stabilization."
                         "Increase separation time but improves quality for Demucs. 10 was used "
@@ -119,12 +118,14 @@ def get_parser():
                         type=int,
                         help="Number of jobs. This can increase memory usage but will "
                              "be much faster when multiple cores are available.")
+
     return parser
 
 
 def main(opts=None):
     parser = get_parser()
     args = parser.parse_args(opts)
+
     try:
         model = get_model_from_args(args)
     except ModelLoadingError as error:
@@ -142,6 +143,7 @@ def main(opts=None):
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
               "You will see that many progress bars per track.")
+
     model.cpu()
     model.eval()
 
@@ -149,9 +151,9 @@ def main(opts=None):
         fatal(
             'error: stem "{stem}" is not in selected model. STEM must be one of {sources}.'.format(
                 stem=args.stem, sources=', '.join(model.sources)))
-    out = args.out
-    out.mkdir(parents=True, exist_ok=True)
-    print(f"Separated tracks will be stored in {out.resolve()}")
+
+    Path(args.out).mkdir(parents=True, exist_ok=True)
+    print(f"Separated tracks will be stored in {Path(args.out).resolve()}")
     for track in args.tracks:
         if not track.exists():
             print(
@@ -186,15 +188,14 @@ def main(opts=None):
         }
         if args.stem is None:
             for source, name in zip(sources, model.sources):
-                stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
+                stem = Path(args.out) / args.filename.format(track=track.name.rsplit(".", 1)[0],
                                                   trackext=track.name.rsplit(".", 1)[-1],
                                                   stem=name, ext=ext)
                 stem.parent.mkdir(parents=True, exist_ok=True)
                 save_audio(source, str(stem), **kwargs)
         else:
             sources = list(sources)
-            stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
-                                              trackext=track.name.rsplit(".", 1)[-1],
+            stem = Path(args.out) / args.filename.format(trackext=track.name.rsplit(".", 1)[-1],
                                               stem=args.stem, ext=ext)
             stem.parent.mkdir(parents=True, exist_ok=True)
             save_audio(sources.pop(model.sources.index(args.stem)), str(stem), **kwargs)
@@ -202,11 +203,11 @@ def main(opts=None):
             other_stem = th.zeros_like(sources[0])
             for i in sources:
                 other_stem += i
-            stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
-                                              trackext=track.name.rsplit(".", 1)[-1],
+            stem = Path(args.out) / args.filename.format(trackext=track.name.rsplit(".", 1)[-1],
                                               stem="no_"+args.stem, ext=ext)
             stem.parent.mkdir(parents=True, exist_ok=True)
             save_audio(other_stem, str(stem), **kwargs)
+
 
 if __name__ == "__main__":
     main()

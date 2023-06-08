@@ -14,6 +14,8 @@ from numpy import dtype, float32, ndarray
 
 from thirdparties.so_vits_svc_fork import cluster, utils
 
+import thirdparties.so_vits_svc_fork
+
 from ..modules.synthesizers import SynthesizerTrn
 from ..utils import get_optimal_device
 

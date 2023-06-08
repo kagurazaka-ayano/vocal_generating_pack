@@ -51,7 +51,7 @@ class Solver(object):
 
         # data augment
         augments = [augment.Shift(shift=int(args.dset.samplerate * args.dset.shift),
-								  same=args.augment.shift_same)]
+                                  same=args.augment.shift_same)]
         if args.augment.flip:
             augments += [augment.FlipChannels(), augment.FlipSign()]
         for aug in ['scale', 'remix']:

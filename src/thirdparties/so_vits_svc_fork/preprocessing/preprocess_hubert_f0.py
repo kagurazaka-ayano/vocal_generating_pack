@@ -13,7 +13,7 @@ from joblib import Parallel, cpu_count, delayed
 from tqdm import tqdm
 from transformers import HubertModel
 
-from thirdparties.so_vits_svc_fork import utils
+from so_vits_svc_fork import utils, f0 as f0_obj
 
 from ..hparams import HParams
 from ..modules.mel_processing import spec_to_mel_torch, spectrogram_torch
@@ -45,10 +45,10 @@ def _process_one(
         return
 
     # Compute f0
-    f0 = thirdparties.so_vits_svc_fork.f0.compute_f0(
+    f0 = f0_obj.compute_f0(
         audio, sampling_rate=sr, hop_length=hps.data.hop_length, method=f0_method
     )
-    f0, uv = thirdparties.so_vits_svc_fork.f0.interpolate_f0(f0)
+    f0, uv = f0_obj.interpolate_f0(f0)
     f0 = torch.from_numpy(f0).float()
     uv = torch.from_numpy(uv).float()
 

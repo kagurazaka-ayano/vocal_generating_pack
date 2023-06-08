@@ -19,6 +19,7 @@ from thirdparties.so_vits_svc_fork.modules.flows import ResidualCouplingBlock
 
 LOG = getLogger(__name__)
 
+import thirdparties.so_vits_svc_fork
 
 class SynthesizerTrn(nn.Module):
     """

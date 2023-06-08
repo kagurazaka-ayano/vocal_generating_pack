@@ -1,28 +1,25 @@
 import binascii
 import struct
 import base64
-import json
 import os
 from Crypto.Cipher import AES
 from thirdparties.demucs import separate
-import thirdparties.demucs
 from torch.cuda import is_available
 from thirdparties.so_vits_svc_fork.inference.main import infer
-from pathlib import Path
 from pydub import AudioSegment
+from classes import *
 from environments import *
 
 
-# code from https://github.com/QCloudHao/ncmdump/blob/master/ncmdump.py
-def convert_ncm(file_path, output_path) -> str:
+def convert_ncm(file_path, output_path) -> Path:
     """
-    convert NetEase ncm file to mp3 file
+    convert NetEase ncm file to plain sound file
     :param file_path: the path of the ncm file
     :param output_path: the path of the output directory
     :return: the path of the output file
     """
     if os.path.splitext(file_path)[-1] != '.ncm':
-        return ""
+        return Path(file_path)
     core_key = binascii.a2b_hex("687A4852416D736F356B496E62617857")
     meta_key = binascii.a2b_hex("2331346C6A6B5F215C5D2630553C2728")
     unpad = lambda s: s[0:-(s[-1] if type(s[-1]) == int else ord(s[-1]))]
@@ -86,10 +83,23 @@ def convert_ncm(file_path, output_path) -> str:
         m.write(chunk)
     m.close()
     f.close()
-    return os.path.join(output_path, file_name)
+    return Path(os.path.join(output_path, file_name))
 
 
-def separate_vocal(track_path: Path, output_path: Path, save_to_config=False, device="cpu" if not is_available() else "cuda", wav_store_method="float32", split_mode="segment", split_num=10, clip_mode="rescale", jobs=os.cpu_count(), repo=r"../files/models/demucs"):
+def separate_vocal(
+        track_path: Path,
+        output_path: Path,
+        save_to_config=False,
+        name="",
+        device="cpu" if not is_available() else "cuda",
+        wav_store_method="float32",
+        split_mode="segment",
+        split_num=5,
+        clip_mode="clamp",
+        jobs=os.cpu_count(),
+        repo=r"../files/models/demucs",
+        extension="mp3"
+) -> dict[str, Path]:
     """
     separate the music into vocals and instruments
     :param track_path: the path of the track
@@ -98,36 +108,97 @@ def separate_vocal(track_path: Path, output_path: Path, save_to_config=False, de
     :param wav_store_method: the method to store the wav file, float32 or int16, default is
     :param split_mode: the method to split the track, --segment or --no-split
     :param split_num: the number of segments to split the track, only works when split_mode is --segment
-    :param split_num: the number of segments to split the track
-    :param clip_mode: the method to clip the track, --clip_mode rescale or --clip_mode clamp, default is rescale
+    :param clip_mode: the method to clip the track, rescale or clamp, default is rescale
     :param jobs: the number of jobs to use, default is use all the cpu logic core if in cpu mode
     :param repo: the repo to download the model, default is https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/
+    :param save_to_config: whether save the config of this function to a file
+    :param name: the name of the config file
+    :param extension: extension of output file, default is mp3
     """
+    lossy = ["mp3", "m4a", "ogg", "aac"]
+    lossless = ["flac", "wav"]
+
+    if extension not in lossy and extension not in lossless:
+        raise ValueError("extension must be one of mp3, m4a, ogg, aac, flac, wav")
+
+    split_mode = split_mode if split_mode in ["segment", "no-split"] else "segment"
+
     args = [str(track_path.resolve()),
          "-o", str(output_path.resolve()),
-         "--repo", repo,
-         "--device", device if device in ["cpu", "cuda"] else "cpu" if not is_available() else "cuda",
+         "--repo", str(repo),
+         "--device", device if device in ["cpu", "cuda"] else "cpu",
          "--" + wav_store_method if wav_store_method in ["float32", "int16"] else "--float32",
          "--" + split_mode, None if split_mode == "no-split" else str(split_num),
          "--clip-mode", clip_mode if clip_mode in ["rescale", "clamp"] else "rescale",
          "--name", "hdemucs_mmi",
          "--jobs", str(0) if jobs < 0 else str(jobs),
-         "--two-stems", "vocals"
+         "--two-stems", "vocals",
+         "--mp3" if extension in lossy else "--flac"
          ]
+
+    if save_to_config:
+        import pickle
+        args.extend([save_to_config, split_num, name])
+        conf = DemucsGenerateParam.from_list(args.copy(), extension)
+        conf.get.save_as(name if name != "" else str(int(pickle.dumps(config)) ** 2))
     try:
+        args = args[:args.index(save_to_config)]
         args.remove(None)
     except ValueError:
         pass
     separate.main(args)
-    return {"vocal": os.path.join(output_path, track_path.name.rsplit(".", 1)[0], "vocals.wav"), "instrumental": os.path.join(output_path, track_path.name.rsplit(".", 1)[0], "no_vocals.wav")}
+
+    if not (extension in lossless and extension != "flac") or not (extension in lossy and extension != "mp3"):
+        print("converting file to " + extension + "...")
+        if extension in lossless:
+            cmd = "ffmpeg -v quiet -threads + " + str(os.cpu_count() // 2) + " -i" + str(Path(os.path.join(output_path, "vocals.wav")).resolve()) + " " + str(Path(os.path.join(output_path, "vocals." + extension.strip("."))).resolve())
+        else:
+            cmd = "ffmpeg -v quiet -threads " + str(os.cpu_count() // 2) + " -i " + str(Path(os.path.join(output_path, "vocals.mp3")).resolve()) + " " + str(Path(os.path.join(output_path, "vocals." + extension.strip("."))).resolve())
+        os.system(cmd)
+        print("done")
+    return {"vocal": Path(os.path.join(output_path, "vocals." + extension.strip("."))), "instrumental": Path(os.path.join(output_path, "no_vocals." + extension.strip(".")))}
 
 
-def apply_so_vits(input_vocal: Path, output_path: Path, model_path: Path, config_path: Path, speaker: str, cluster=None, db_threshold=-35, auto_predict_f0=True, noice_scale=0.4, pad_seconds=0.5, f0_method="dio", chunk_seconds=0.5, max_chunk_seconds=40, cluster_infer_ratio=0):
+def separate_vocal_parameterized(param: DemucsGenerateParam) -> dict[str, Path]:
+    print(param.data.dict)
+    return separate_vocal(
+        track_path=param.data.track_path,
+        output_path=param.data.output_path,
+        save_to_config=param.data.save_to_config,
+        name=param.data.name,
+        device=param.data.device,
+        wav_store_method=param.data.wav_store_method,
+        split_mode=param.data.split_mode,
+        split_num=param.data.split_num,
+        clip_mode=param.data.clip_mode,
+        jobs=param.data.jobs,
+        repo=param.data.repo,
+        extension=param.data.extension
+    )
+
+
+def apply_so_vits(input_vocal: Path,
+                  output_path: Path,
+                  model_path: Path,
+                  config_file_path: Path,
+                  speaker: str,
+                  cluster=None,
+                  db_threshold=-35,
+                  auto_predict_f0=True,
+                  noice_scale=0.4,
+                  pad_seconds=0.5,
+                  f0_method="dio",
+                  chunk_seconds=0.5,
+                  max_chunk_seconds=40,
+                  cluster_infer_ratio=0,
+                  save_to_config=False,
+                  name="",
+                  ):
     """
     :param input_vocal: the path of the extracted vocal
     :param output_path: the path of the output directory
     :param model_path: the path of the model
-    :param config_path: the path of the model config file
+    :param config_file_path: the path of the model config file
     :param speaker: the speaker of the vocal
     :param cluster: the cluster model for the vocal, optional
     :param db_threshold: the db threshold to remove the noice, default is -35
@@ -138,6 +209,8 @@ def apply_so_vits(input_vocal: Path, output_path: Path, model_path: Path, config
     :param chunk_seconds: length of each vocal chunk, default is 0.5
     :param max_chunk_seconds: max length of each vocal chunk, default is 40
     :param cluster_infer_ratio: the ratio to infer the cluster, default is 0
+    :param save_to_config: whether save the config of this function to a file
+    :param name: the name of the config file
     """
     clamp = lambda num, low, high: min(high, max(num, low))
     db_threshold = clamp(db_threshold, 0., -60.)
@@ -152,20 +225,20 @@ def apply_so_vits(input_vocal: Path, output_path: Path, model_path: Path, config
         raise FileNotFoundError(f"File {input_vocal} not found")
     if not model_path.exists():
         raise FileNotFoundError(f"Model {model_path} not found")
-    if not config_path.exists():
-        raise FileNotFoundError(f"Config {config_path} not found")
+    if not config_file_path.exists():
+        raise FileNotFoundError(f"Config {config_file_path} not found")
     if cluster is not None and not cluster.exists():
         raise FileNotFoundError(f"Cluster model {cluster} not found")
 
-    if speaker not in json.load(open(config_path))["spk"]:
-        raise ValueError(f"Speaker {speaker} not found in config {config_path}")
+    if speaker not in json.load(open(config_file_path))["spk"]:
+        raise ValueError(f"Speaker {speaker} not found in config {config_file_path}")
 
     output_file = output_path / Path(f"voice_generated_with_{speaker}.wav").name
-    return infer(
+    path_out = infer(
         input_path=input_vocal,
         output_path=output_file,
         model_path=model_path,
-        config_path=config_path,
+        config_path=config_file_path,
         speaker=speaker,
         cluster_model_path=cluster,
         auto_predict_f0=auto_predict_f0,
@@ -177,6 +250,7 @@ def apply_so_vits(input_vocal: Path, output_path: Path, model_path: Path, config
         max_chunk_seconds=max_chunk_seconds,
         cluster_infer_ratio=cluster_infer_ratio
     )
+    return path_out
 
 
 def fuse_vocal_and_instrumental(vocal_path: Path, instrumental_path: Path, output_path: Path, speaker: str):
@@ -193,6 +267,7 @@ def fuse_vocal_and_instrumental(vocal_path: Path, instrumental_path: Path, outpu
     vocal = AudioSegment.from_file(vocal_path)
     instrumental = AudioSegment.from_file(instrumental_path)
     out = vocal.overlay(instrumental)
-    out.export(output_path / Path(vocal_path.name + f"_counterfeited_by_{speaker}.wav").name, format="wav")
-    return output_path / Path(vocal_path.name + f"_counterfeited_from_{speaker}.wav").name
+    out.export(output_path / Path(vocal_path.stem + f"_counterfeited_by_{speaker}.wav").name, format="wav")
+    return output_path / Path(vocal_path.stem + f"_counterfeited_from_{speaker}.wav").name
 
+separate_vocal(track_path=Path("demo_assets/demo.wav"), output_path=Path("demo_assets/separated"), save_to_config=True, name="demo", wav_store_method="float32", split_mode="vocal", split_num=2, clip_mode="vocal", jobs=os.cpu_count(), repo=demucs_model_path, extension="wav")

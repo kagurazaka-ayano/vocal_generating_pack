@@ -1,26 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="song-generation-pack-home" uploadOnCheckin="3bc27309-e814-4b55-ab86-a4bcdc3db419" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false" compareModeInSync="TEXT" showDifferentInSync="false" showNewOnTargetInSync="false" showExcludedInSync="true">
+  <component name="PublishConfigData" autoUpload="Always" serverName="song-generation-pack" createEmptyFolders="true" uploadOnCheckin="3bc27309-e814-4b55-ab86-a4bcdc3db419" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
       <paths name="song-generation-pack">
         <serverdata>
           <mappings>
-            <mapping deploy="/Development/song_generation_pack" local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="song-generation-pack-home">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/Development/song_generating_pack" local="$PROJECT_DIR$/../song_generating_pack" />
+            <mapping deploy="/projects/song_generating_pack" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
       <paths name="song-generation-pack-remote">
         <serverdata>
           <mappings>
-            <mapping deploy="/Development/song_generating_pack" local="$PROJECT_DIR$/../song_generating_pack" web="/" />
+            <mapping deploy="/projects/song_generating_pack" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

@@ -6,7 +6,7 @@
 
 from ._explorers import MyExplorer
 from dora import Launcher
-from thirdparties.demucs import train
+from demucs import train
 
 
 def get_sub(launcher, sig):

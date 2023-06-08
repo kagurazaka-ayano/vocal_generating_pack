@@ -3,8 +3,15 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/files/datasets" />
+      <excludeFolder url="file://$MODULE_DIR$/files/models" />
+      <excludeFolder url="file://$MODULE_DIR$/files/models/pretrained" />
+      <excludeFolder url="file://$MODULE_DIR$/files/output" />
+      <excludeFolder url="file://$MODULE_DIR$/files/presets" />
+      <excludeFolder url="file://$MODULE_DIR$/files/presets/demucs" />
+      <excludeFolder url="file://$MODULE_DIR$/files/presets/so-vits" />
     </content>
-    <orderEntry type="jdk" jdkName="song-generating-pack" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="vocal_generating_pack" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
@@ -14,7 +21,6 @@
   <component name="PyNamespacePackagesService">
     <option name="namespacePackageFolders">
       <list>
-        <option value="$MODULE_DIR$/src/thirdparties/demucs" />
         <option value="$MODULE_DIR$/src/thirdparties/so_vits_svc_fork" />
       </list>
     </option>

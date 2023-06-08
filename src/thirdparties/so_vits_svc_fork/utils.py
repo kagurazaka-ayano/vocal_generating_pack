@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import platform
 import re
 import subprocess
 import warnings
@@ -31,6 +32,9 @@ IS_COLAB = os.getenv("COLAB_RELEASE_TAG", False)
 
 
 def get_optimal_device(index: int = 0) -> torch.device:
+    # supress the warning of using mps device
+    if platform.system() == "Darwin":
+        return torch.device("cpu")
     if torch.cuda.is_available():
         return torch.device(f"cuda:{index % torch.cuda.device_count()}")
     elif torch.backends.mps.is_available():
