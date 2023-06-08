@@ -161,8 +161,9 @@ cython_debug/
 
 
 # models and presets
-files/models/*
-files/presets/*
-files/out
-!.gitkeep
+files
+!files/sources.json
 .DS_Store
+*.th
+*.pth
+*.pt
