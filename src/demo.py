@@ -1,12 +1,11 @@
 import os
 from functions import separate_vocal, apply_so_vits, fuse_vocal_and_instrumental, convert_ncm, Path
-from model_manager import get_so_vits_model, get_demucs_models
-from environments import remote_so_vits_models, so_vits_model_path, config
-from utilities import get_avaliable_so_vits_models_dict
-
+from resource_manager import get_data_from_source
+from environment import so_vits_model_path, config
 model_path = Path("demo_assets/models/").resolve()
-get_demucs_models()
-get_so_vits_model("genshin", so_vits_model_path, remote_so_vits_models["genshin"]["link"], update_cache=False)
+
+model_path = get_data_from_source("so-vits", "model", "nahida-jp", update_cache=True)
+
 path = Path(config["output"]) / Path("demo")
 converted_path = convert_ncm("demo_assets/demo.wav", Path(path.stem)/Path("./converted/"))
 print("converted")

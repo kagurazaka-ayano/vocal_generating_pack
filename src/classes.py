@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
-from environments import *
+from environment import *
+
 
 class AttributeDict(dict):
 	from pathlib import Path
+
 	def __init__(self, data={}):
-		super().__init__()
 		if not isinstance(data, dict):
 			raise TypeError("data must be a dictionary")
+		data = self._reject_reserved_keys(data)
 		super(AttributeDict, self).__init__(data)
 		self.update(data)
 
@@ -17,10 +18,45 @@ class AttributeDict(dict):
 	def _check_save_availability(self, cwd: dict):
 		for i in cwd:
 			if isinstance(cwd[i], dict):
-				return self._check_save(cwd[i])
+				return self._check_save_availability(cwd[i])
 			elif not isinstance(cwd[i], (str, int, float, bool, list)):
 				return False
 		return True
+
+	def _reject_reserved_keys(self, object={}):
+		reserved_key_prefix = "__"
+		reserved_key_suffix = None
+
+		if isinstance(object, dict):
+			for key, value in list(object.items()):
+				is_reserved = False
+
+				if len(reserved_key_prefix or ''):
+					is_reserved = key.startswith(reserved_key_prefix)
+
+				if len(reserved_key_suffix or ''):
+					is_reserved = is_reserved or key.startswith(reserved_key_suffix)
+
+				if is_reserved:
+					del object[key]
+
+				else:
+					object[key] = self._reject_reserved_keys(object[key])
+		return object
+
+
+	def make_json_able(self):
+		"""
+		make the dict json able
+		"""
+		for i in self:
+			if isinstance(self[i], dict):
+				AttributeDict.make_json_able(self[i])
+			elif isinstance(self[i], Path):
+				self[i] = str(self[i])
+			print(i, self[i])
+		self.update(self)
+
 
 	@classmethod
 	def from_attrib_dict(cls, data):
@@ -35,13 +71,12 @@ class AttributeDict(dict):
 	def dict(self):
 		return self.__dict__
 
-	def tree(self, cwd:dict, layer=[]):
+	def tree(self, cwd: dict, layer=[]):
 		for i in cwd:
 			if isinstance(cwd[i], dict):
 				self.tree(cwd[i], layer+[i])
 			else:
 				print(".".join(layer+[i]), ":", cwd[i])
-
 
 	@staticmethod
 	def parse_point_expression(expression: str):
@@ -67,29 +102,28 @@ class AttributeDict(dict):
 			point_dict[point_expression[0]] = AttributeDict.construct_nested_dict(point_expression[1:], value, {})
 		return point_dict
 
-	@staticmethod
 	# update self.data with another nested dictionary, fuse elements in the same level into one dict
-	def update_nested_dict(dict1: dict, dict2: dict, strict=True, removal=False):
+	def update_nested_dict(self, dict2: dict, strict=True, removal=False):
 		"""
 		update local stored data with dict2, ignore different elements
-		:param strict: whether check the attribute exist or not
-		:param dict1: base dict
+		:param strict: whether check the attribute exist or not\
 		:param dict2: source dict
 		:param removal: whether remove the element not in dict2
 		"""
 		for key, value in dict2.items():
-			if key in dict1:
-				if isinstance(dict1[key], dict) and isinstance(value, dict):
-					AttributeDict.update_nested_dict(dict1[key], value, strict)
-				elif dict1[key] == value:
+			if key in self:
+				if isinstance(self[key], dict) and isinstance(value, dict):
+					AttributeDict.update_nested_dict(self[key], value, strict)
+				elif self[key] == value:
 					pass
 				else:
-					dict1[key] = value
+					self[key] = value
 			else:
 				if strict:
 					raise KeyError(f"Attribute {key} not found")
 				elif not removal:
-					dict1[key] = value
+					self[key] = value
+		self.update(self)
 
 	@staticmethod
 	# add a value to a nested dict, according to the point expression, don't ignore different and nonexistent elements
@@ -104,22 +138,30 @@ class AttributeDict(dict):
 		AttributeDict.update_nested_dict(dict_1, AttributeDict.construct_nested_dict(point_expression, value, {}),
 										 strict)
 
-	def get_attribute(self, attr: str, strict=True) -> object:
+	def get_attribute(self, attr, cwd, strict=True) -> object:
 		"""
-		get a copy of the value indicated in the position attr
+		get the reference of the value indicated in the position attr if the attribute exists and is a reference type
 		:param attr: attribute pending fetch
 		:param strict: whether check the attribute exist or not
+		:param cwd: current working dict
 		:return: a copy of the value indicated in the position attr
 		"""
-		temp = self.__dict__.copy()
-		for expression in AttributeDict.parse_point_expression(attr):
-			temp = temp.get(expression)
-			if temp is None:
-				if strict:
-					raise KeyError(f"Attribute {attr} not found")
-				else:
-					return None
-		return temp
+		depth = 0
+		if isinstance(attr, str):
+			attr = AttributeDict.parse_point_expression(attr)
+		if attr[0] not in cwd.keys():
+			if strict:
+				path = ""
+				for i in range(depth + 1):
+					path += attr[i] + "."
+				raise KeyError(f"Attribute {path.strip('.')} not found")
+			else:
+				return None
+		else:
+			if len(attr) == 1:
+				return cwd.get(attr[0])
+			else:
+				return self.get_attribute(attr[1:], cwd=cwd.get(attr[0]), strict=strict)
 
 	def set_attribute(self, attr: str, value: object, strict=True):
 		"""
@@ -130,7 +172,7 @@ class AttributeDict(dict):
 		:return:
 		"""
 		attrs = AttributeDict.parse_point_expression(attr)
-		AttributeDict.update_nested_dict(self.dict, AttributeDict.construct_nested_dict(attrs, value, {}), strict)
+		self.update_nested_dict(AttributeDict.construct_nested_dict(attrs, value, {}), strict)
 		self.update(self.__dict__)
 		return self
 
@@ -143,32 +185,33 @@ class AttributeDict(dict):
 		"""
 		remove the element at attr
 		:param attr: point expression of the element pending remove
-		:param cwd: current working dictionary, the beginning of the search
-		:param strict: use strict mode or not, if not, raise exception when the attr doesn' exist
-		:return:
+		:param cwd: current working dictionary, the beginning of the search, usually self.__dict__
+		:param strict: use strict mode or not, if not, raise exception when the attr doesn't exist
 		"""
 		attrs = AttributeDict.parse_point_expression(attr)
-		if AttributeDict.get_attribute(AttributeDict(cwd), attr, False) is None:
+		if AttributeDict(cwd)[attr] is None:
 			if strict:
 				raise KeyError(f"Attribute {attr} not found")
 			return None
 		elif len(attrs) == 1:
-			t = cwd[attrs[0]]
-			cwd.pop(list(cwd.keys())[list(cwd.values()).index(t)])
-			self.update(self.__dict__)
-			return t
+			return cwd.pop(attrs[0])
 		else:
 			attr = ""
 			for i in attrs[1:]:
 				attr += i + "."
 			attr = attr.strip(".")
-			return self.remove_attribute(attr, cwd[attrs[0]], strict)
+			t = self.remove_attribute(attr, cwd[attrs[0]], strict)
+			print("cwd", cwd, "\n")
+			print("self", self.__dict__, "\n")
+			input("\n")
+			self.update(cwd)
+			return t
 
 	def has_attribute(self, attr: str):
-		return self.get_attribute(attr, False) is not None
+		return self.get_attribute(attr, self) is not None
 
 	def to_file(self, name=None):
-		if not self._check_save_availability(self.dict):
+		if not self._check_save_availability(self.__dict__):
 			raise ValueError("Cannot save this object")
 		import pickle
 		from json import dump
@@ -179,17 +222,24 @@ class AttributeDict(dict):
 		dump(self.__dict__, open(f"{name}.json", "w"))
 
 	def update(self, entries, *args, **kwargs):
-		for key, value in dict(entries).items():
-			if isinstance(value, dict):
-				self.__dict__[key] = AttributeDict(value)
-			else:
-				self.__dict__[key] = value
+		for key, value in entries.items():
+			self.__dict__[key] = value
 		self._refresh()
 
 	def __getitem__(self, item):
-		if not isinstance(item, str):
+		if not isinstance(item, (str, list)):
 			raise TypeError("item must be a string")
-		return self.get_attribute(item)
+		if isinstance(item, list):
+			ans = ""
+			for i in item:
+				ans += i + "."
+			item = ans.strip(".")
+		try:
+			return AttributeDict(self.__dict__[item])
+		except KeyError:
+			return self.get_attribute(item, self, False)
+		except TypeError:
+			return self.get_attribute(item, self, False)
 
 	def __setitem__(self, key, value):
 		if not isinstance(key, str):
@@ -207,6 +257,13 @@ class AttributeDict(dict):
 		return result
 
 	def pop(self, key, value=None):
+		if not isinstance(key, (str, list)):
+			raise TypeError("key must be a string")
+		if isinstance(key, list):
+			ans = ""
+			for i in key:
+				ans += i + "."
+			key = ans.strip(".")
 		result = self.__dict__.pop(key, value)
 		self._refresh()
 		return result
@@ -262,10 +319,11 @@ class AttributeDict(dict):
 		"""
 		return self.__dict__.__ne__(other)
 
+	def __copy__(self):
+		return AttributeDict(self.__dict__)
+
 class ParamAbstract(ABC):
 	from pathlib import Path
-
-
 	def __init__(self, name: str, param_type: str, **kwargs):
 		assert param_type in ["DemucsGenerate", "DemucsTrain", "SoVitsGenerate", "SoVitsTrain"]
 		self.data = AttributeDict()

@@ -8,7 +8,8 @@ from torch.cuda import is_available
 from thirdparties.so_vits_svc_fork.inference.main import infer
 from pydub import AudioSegment
 from classes import *
-from environments import *
+from environment import *
+from resource_manager import get_so_vits_model
 
 
 def convert_ncm(file_path, output_path) -> Path:
@@ -133,7 +134,7 @@ def separate_vocal(
          "--name", "hdemucs_mmi",
          "--jobs", str(0) if jobs < 0 else str(jobs),
          "--two-stems", "vocals",
-         "--mp3" if extension in lossy else "--flac"
+         "--mp3" if extension in lossy else None
          ]
 
     if save_to_config:
@@ -148,7 +149,7 @@ def separate_vocal(
         pass
     separate.main(args)
 
-    if not (extension in lossless and extension != "flac") or not (extension in lossy and extension != "mp3"):
+    if not (extension in lossless and extension != "wav") or not (extension in lossy and extension != "mp3"):
         print("converting file to " + extension + "...")
         if extension in lossless:
             cmd = "ffmpeg -v quiet -threads + " + str(os.cpu_count() // 2) + " -i" + str(Path(os.path.join(output_path, "vocals.wav")).resolve()) + " " + str(Path(os.path.join(output_path, "vocals." + extension.strip("."))).resolve())
@@ -270,4 +271,5 @@ def fuse_vocal_and_instrumental(vocal_path: Path, instrumental_path: Path, outpu
     out.export(output_path / Path(vocal_path.stem + f"_counterfeited_by_{speaker}.wav").name, format="wav")
     return output_path / Path(vocal_path.stem + f"_counterfeited_from_{speaker}.wav").name
 
-separate_vocal(track_path=Path("demo_assets/demo.wav"), output_path=Path("demo_assets/separated"), save_to_config=True, name="demo", wav_store_method="float32", split_mode="vocal", split_num=2, clip_mode="vocal", jobs=os.cpu_count(), repo=demucs_model_path, extension="wav")
+
+

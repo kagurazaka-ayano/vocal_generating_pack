@@ -161,9 +161,12 @@ cython_debug/
 
 
 # models and presets
-files
-!files/sources.json
+files/datasets
+files/models
+files/presets
+files/output
 .DS_Store
 *.th
 *.pth
 *.pt
+files/sources.json
