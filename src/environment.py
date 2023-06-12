@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 from requests import get
-from classes import AttributeDict
+import classes
 
 config_path = Path("environment.json").resolve()
 if not config_path.exists():
@@ -51,7 +51,7 @@ Path("../files").mkdir(exist_ok=True, parents=True)
 if not sources_path.exists():
 	with open(sources_path, "wb+") as s:
 		s.write(get("https://github.com/ayano-kagurazaka/song_generating_pack/blob/94381b2cfa098f3c1b1a16d4122aac4e92fcc58c/files/sources.json").content)
-sources = AttributeDict(json.load(open(sources_path, "r")))
+sources = classes.AttributeDict(json.load(open(sources_path, "r")))
 print("done")
 
 def update_env():
@@ -62,7 +62,7 @@ def update_env():
 		with open(sources_path, "wb+") as s:
 			s.write(
 				get("https://github.com/ayano-kagurazaka/song_generating_pack/blob/94381b2cfa098f3c1b1a16d4122aac4e92fcc58c/files/sources.json").content)
-	sources = AttributeDict(json.load(open(sources_path, "r")))
+	sources = classes.AttributeDict(json.load(open(sources_path, "r")))
 	demucs_model_path = Path(config["model"]["demucs"]).resolve()
 	so_vits_model_path = Path(config["model"]["so-vits"]).resolve()
 	demucs_preset_path = Path(config["preset"]["demucs"]).resolve()
@@ -70,3 +70,4 @@ def update_env():
 	so_vits_dataset_path = Path(config["dataset"]["so-vits"]).resolve()
 	demucs_dataset_path = Path(config["dataset"]["demucs"]).resolve()
 	output_path = Path(config["output"]).resolve()
+

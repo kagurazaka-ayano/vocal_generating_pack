@@ -63,3 +63,4 @@
 - [so-vits-svc-fork](https://github.com/voicepaw/so-vits-svc-fork)
 - [ncm解包器](https://github.com/QCloudHao/ncmdump)
 - [纳西妲so-vits-svc模型](https://huggingface.co/kaze-mio/so-vits-genshin)
+- 

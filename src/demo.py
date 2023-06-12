@@ -1,7 +1,7 @@
 import os
 from functions import separate_vocal, apply_so_vits, fuse_vocal_and_instrumental, convert_ncm, Path
 from resource_manager import get_data_from_source
-from environment import so_vits_model_path, config
+from environment import config
 model_path = Path("demo_assets/models/").resolve()
 
 model_path = get_data_from_source("so-vits", "model", "nahida-jp", update_cache=True)

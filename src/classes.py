@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from environment import *
+from pathlib import Path
 
 
 class AttributeDict(dict):
@@ -54,7 +54,6 @@ class AttributeDict(dict):
 				AttributeDict.make_json_able(self[i])
 			elif isinstance(self[i], Path):
 				self[i] = str(self[i])
-			print(i, self[i])
 		self.update(self)
 
 
@@ -194,18 +193,13 @@ class AttributeDict(dict):
 				raise KeyError(f"Attribute {attr} not found")
 			return None
 		elif len(attrs) == 1:
-			return cwd.pop(attrs[0])
+			del cwd[attrs[0]]
 		else:
 			attr = ""
 			for i in attrs[1:]:
 				attr += i + "."
 			attr = attr.strip(".")
-			t = self.remove_attribute(attr, cwd[attrs[0]], strict)
-			print("cwd", cwd, "\n")
-			print("self", self.__dict__, "\n")
-			input("\n")
-			self.update(cwd)
-			return t
+			self.remove_attribute(attr, cwd[attrs[0]], strict)
 
 	def has_attribute(self, attr: str):
 		return self.get_attribute(attr, self) is not None
@@ -244,7 +238,7 @@ class AttributeDict(dict):
 	def __setitem__(self, key, value):
 		if not isinstance(key, str):
 			raise TypeError("key must be a string")
-		self.set_attribute(key, value)
+		self.set_attribute(key, value, strict=False)
 
 	def keys(self):
 		return self.__dict__.keys()
@@ -370,6 +364,7 @@ class DemucsGenerateParam(ParamAbstract):
 		return self.data["name"]
 
 	def save_as(self, name: str = None):
+		from environment import demucs_preset_path
 		from json import dump
 		dump(self.data.dict, open(f"{demucs_preset_path}/{self.data['name'] if name is None else name}.json", "w+"))
 
@@ -401,6 +396,7 @@ class DemucsGenerateParam(ParamAbstract):
 	@classmethod
 	def from_file(cls, name: str):
 		from json import load
+		from environment import demucs_preset_path
 		return cls.from_dict(load(open(f"{demucs_preset_path}/{name}", "r")))
 
 	@classmethod

@@ -7,9 +7,8 @@ from thirdparties.demucs import separate
 from torch.cuda import is_available
 from thirdparties.so_vits_svc_fork.inference.main import infer
 from pydub import AudioSegment
-from classes import *
+from classes import DemucsGenerateParam
 from environment import *
-from resource_manager import get_so_vits_model
 
 
 def convert_ncm(file_path, output_path) -> Path:
@@ -98,7 +97,7 @@ def separate_vocal(
         split_num=5,
         clip_mode="clamp",
         jobs=os.cpu_count(),
-        repo=r"../files/models/demucs",
+        repo=r"../files/models/demucs/hdemucs_mmi",
         extension="mp3"
 ) -> dict[str, Path]:
     """
@@ -161,7 +160,6 @@ def separate_vocal(
 
 
 def separate_vocal_parameterized(param: DemucsGenerateParam) -> dict[str, Path]:
-    print(param.data.dict)
     return separate_vocal(
         track_path=param.data.track_path,
         output_path=param.data.output_path,
@@ -271,5 +269,19 @@ def fuse_vocal_and_instrumental(vocal_path: Path, instrumental_path: Path, outpu
     out.export(output_path / Path(vocal_path.stem + f"_counterfeited_by_{speaker}.wav").name, format="wav")
     return output_path / Path(vocal_path.stem + f"_counterfeited_from_{speaker}.wav").name
 
+
+def resample(input_path: Path, output_path: Path, sample_rate: int):
+    """
+    :param input_path: the path of the input file
+    :param output_path: the path of the output file
+    :param sample_rate: the sample rate of the output file
+    :return: the path of the output file
+    """
+    if not input_path.exists():
+        raise FileNotFoundError(f"File {input_path} not found")
+    output_path.mkdir(parents=True, exist_ok=True)
+    cmd = f"ffmpeg -i {input_path} -ar {sample_rate} {output_path / Path(input_path.name).name}"
+    os.system(cmd)
+    return output_path / Path(input_path.name).name
 
 

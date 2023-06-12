@@ -1,9 +1,8 @@
-from typing import Set, Any, Tuple, Dict
+from typing import Any
 
 from environment import demucs_model_path, so_vits_model_path, config
 from utilities import *
 import requests, huggingface_hub, re
-from classes import AttributeDict
 
 
 def get_data_from_source(engine_name: str, file_type: str, file_name: str, update_cache=False):
@@ -12,7 +11,7 @@ def get_data_from_source(engine_name: str, file_type: str, file_name: str, updat
 	"""
 	download_result = {}
 	try:
-		model_download_data_list = sources.get_attribute(f"{engine_name}.{file_type}.{file_name}.link", strict=True)
+		model_download_data_list = sources.get_attribute(f"{engine_name}.{file_type}.{file_name}.link", sources, strict=True)
 	except KeyError as e:
 		raise e
 	for i in model_download_data_list:
@@ -23,6 +22,7 @@ def get_data_from_source(engine_name: str, file_type: str, file_name: str, updat
 				download_result.update(get_so_vits_model(model_name=file_name, link=i, download_path=so_vits_model_path, update_cache=update_cache))
 			case _:
 				print(f"engine {engine_name} not supported, skipping")
+
 	return download_result
 
 
@@ -116,28 +116,48 @@ def get_hugging_face_model(name, value, download_path, update_cache=True) -> dic
 	repo_id = match.group(1) + "/" + match.group(2).strip("/")
 	local_cache_path = Path(huggingface_hub.snapshot_download(repo_id, allow_patterns=["*.pt", "*.pth", "*.json"], force_download=update_cache))
 	move_file(local_cache_path, download_path.joinpath(name))
+	for k, l in zip([i.name for i in download_path.joinpath(name).iterdir()], [j.resolve() for j in download_path.joinpath(name).iterdir()]):
+		update_download_path("so-vits", "model", name, k, l)
+	return dict(zip([i.name for i in download_path.joinpath(name).iterdir()], [j.resolve() for j in download_path.joinpath(name).iterdir()]))
 
-	update_download_path_dict("so-vits", "model", name, dict(zip([i.name for i in download_path.joinpath(name).iterdir()], [j.resolve() for j in download_path.joinpath(name).iterdir()])))
-
-	return dict(zip([i.name for i in download_path.iterdir()], [j.resolve() for j in download_path.iterdir()]))
 
 def export_sources(ignore_private:bool=False):
-	def traverse_dict_remove_private(dict_in, cwd: str = ""):
-		result_remove = []
-		for i in dict_in.keys():
+	"""
+	export sources.json to sources_export.json, remove private sources and local paths
+	"""
+	def traverse_dict_remove_private(dict_in:dict):
+		ret = {}
+		for i in dict_in:
 			if isinstance(dict_in[i], dict):
-				result_remove.extend(traverse_dict_remove_private(dict_in[i], cwd + i + "."))
-			if dict_in.get("private", False) and not ignore_private:
-				result_remove.append(cwd)
-			if dict_in.get("local", False):
-				dict_in["local"] = {}
-		return result_remove
+				if i == "local":
+					ret[i] = {}
+				elif not (dict_in[i].get("private", False) and dict_in[i].get("private", False)) or ignore_private:
+					ret[i] = traverse_dict_remove_private(dict_in[i])
+			else:
+				ret[i] = dict_in[i]
+		return ret
+	ans = traverse_dict_remove_private(sources.__dict__)
+	json.dump(ans, open(config["sources_export"], "w+"), indent=4)
 
-	for i in set(traverse_dict_remove_private(dict_in=dict(sources))):
-		sources.remove_attribute(i.strip("."), sources)
-	print("sources", sources)
-	json.dump(sources, open(config["sources_export"], "w+"), indent=4)
 
-export_sources()
+def download_all_models(update_cache=False):
+	"""
+	download all models from sources.json
+	"""
+	ans = {}
+	for i in sources:
+		for j in sources[i]["models"]:
+			ans.update(get_data_from_source(i, "model", j, update_cache=update_cache))
+	return ans
 
+
+def get_all_datasests(update_cache=False):
+	raise NotImplementedError
+
+
+def get_all_resources(update_cache=False):
+	"""
+	get all resources from sources.json
+	"""
+	download_all_models(update_cache=update_cache)
 

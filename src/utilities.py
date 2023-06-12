@@ -59,10 +59,9 @@ def move_file(directory: Path, root_dir: Path):
 def update_download_path(engine_name: str, file_type: str, model_name: str, file_name: str, download_path: Path):
 	if not isinstance(sources[engine_name][file_type][model_name]["local"], dict):
 		sources[f"{engine_name}.{file_type}.{model_name}.local"] = {}
-	sources[engine_name][file_type][model_name]["local"].update({file_name: str(download_path)})
-	json.dump(sources, open(str(sources_path), "w+"), indent=4)
+	sources.__dict__[engine_name][file_type][model_name]["local"].update({file_name: str(download_path)})
+	json.dump(sources.__dict__, open(str(sources_path), "w+"), indent=4)
 	update_env()
-	return sources_path
 
 
 def update_download_path_dict(engine_name: str, file_type: str, model_name: str, data: dict):
