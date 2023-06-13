@@ -1,7 +1,6 @@
 # 基于demucs和so-vits-svc的语音分离与生成
 
 ## 功能
-- 网易云音乐ncm格式解包
 - 语音分离
 - 语音生成
 - 合并音频
@@ -44,7 +43,7 @@
     - Mac: `brew install ffmpeg`
 
 6. 安装CUDA release 12.1和cuDNN v8.9.2(如果你想要使用NvidiaGPU训练)
-    > 不支持AMD GPU
+
     > 安装cudnn时会被要求注册nvidia developer account
     > CUDA和cuDNN的配置详见[这篇文章(win)](https://zhuanlan.zhihu.com/p/99880204)和[这篇文章(linux)](https://blog.csdn.net/qq_40263477/article/details/105132822)
     - Windows: [CUDA](https://developer.nvidia.com/cuda-downloads) [cuDNN](https://developer.nvidia.com/cudnn)
@@ -55,12 +54,12 @@
 - [ ] 集成模型训练
 - [ ] Qt GUI
 - [ ] WebUI
-- [ ] 自动下载模型
+- [ ] 模型管理器
 - [ ] 插件系统
 
 ## 借物表
-- [demucs](https://github.com/facebookresearch/demucs)
-- [so-vits-svc-fork](https://github.com/voicepaw/so-vits-svc-fork)
-- [ncm解包器](https://github.com/QCloudHao/ncmdump)
-- [纳西妲so-vits-svc模型](https://huggingface.co/kaze-mio/so-vits-genshin)
-- 
+- [demucs(MIT)](https://github.com/facebookresearch/demucs)
+- [so-vits-svc-fork(MIT)](https://github.com/voicepaw/so-vits-svc-fork)
+- [纳西妲so-vits-svc模型(MIT)](https://huggingface.co/kaze-mio/so-vits-genshin)
+- [土狗哥-空庭雨(已获得原作者授权)](https://music.163.com/song?id=2006730110)
+- []

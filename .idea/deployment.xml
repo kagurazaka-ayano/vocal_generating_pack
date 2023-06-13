@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="song-generation-pack" createEmptyFolders="true" uploadOnCheckin="3bc27309-e814-4b55-ab86-a4bcdc3db419" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="song-generation-pack-remote" createEmptyFolders="true" uploadOnCheckin="3bc27309-e814-4b55-ab86-a4bcdc3db419" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
       <paths name="song-generation-pack">
