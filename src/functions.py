@@ -146,6 +146,7 @@ def separate_vocal(
         args.remove(None)
     except ValueError:
         pass
+    print(args)
     separate.main(args)
 
     if not (extension in lossless and extension != "wav") or not (extension in lossy and extension != "mp3"):
