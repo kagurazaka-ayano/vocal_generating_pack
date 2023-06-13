@@ -51,8 +51,14 @@ Path("../files").mkdir(exist_ok=True, parents=True)
 if not sources_path.exists():
 	with open(sources_path, "wb+") as s:
 		print("downloading sources.json...")
-		s.write(get("https://github.com/ayano-kagurazaka/song_generating_pack/blob/94381b2cfa098f3c1b1a16d4122aac4e92fcc58c/files/sources.json").content)
-sources = classes.AttributeDict(json.load(open(sources_path, "r")))
+		s.write(get("https://raw.githubusercontent.com/ayano-kagurazaka/vocal_generating_pack/main/files/sources_export.json").content)
+try:
+	sources = classes.AttributeDict(json.load(open(sources_path, "r")))
+except json.decoder.JSONDecodeError:
+	print("sources.json is broken, downloading again...")
+	with open(sources_path, "wb+") as s:
+		s.write(get("https://raw.githubusercontent.com/ayano-kagurazaka/vocal_generating_pack/main/files/sources_export.json").content)
+	sources = classes.AttributeDict(json.load(open(sources_path, "r")))
 print("done")
 
 def update_env():
@@ -62,7 +68,7 @@ def update_env():
 	if not sources_path.exists():
 		with open(sources_path, "wb+") as s:
 			s.write(
-				get("https://github.com/ayano-kagurazaka/song_generating_pack/blob/94381b2cfa098f3c1b1a16d4122aac4e92fcc58c/files/sources.json").content)
+				get("https://raw.githubusercontent.com/ayano-kagurazaka/vocal_generating_pack/main/files/sources_export.json").content)
 	sources = classes.AttributeDict(json.load(open(sources_path, "r")))
 	demucs_model_path = Path(config["model"]["demucs"]).resolve()
 	so_vits_model_path = Path(config["model"]["so-vits"]).resolve()
