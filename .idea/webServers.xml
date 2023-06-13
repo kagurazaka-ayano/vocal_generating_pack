@@ -3,9 +3,9 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="3bc27309-e814-4b55-ab86-a4bcdc3db419" name="song-generation-pack">
-        <fileTransfer rootFolder="/home/tsukasa" accessType="SFTP" host="home_gpu_remote" port="11764" sshConfigId="64108d1c-e411-40e8-ad3f-2088f91c14ae" sshConfig="tsukasa@home_gpu_remote:11764 agent" authAgent="true">
+        <fileTransfer rootFolder="/home/tsukasa" accessType="SFTP" host="home_gpu" port="22" sshConfigId="9c1000c2-8ce0-44ed-a060-da9aca013d0b" sshConfig="tsukasa@home_gpu:22 agent" authAgent="true">
           <advancedOptions>
-            <advancedOptions dataProtectionLevel="Private" connections="10" passiveMode="true" shareSSLContext="true" isUseRsync="true" />
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" connections="10" passiveMode="true" shareSSLContext="true" isUseRsync="true" />
           </advancedOptions>
         </fileTransfer>
         <option name="numberOfConnections" value="10" />

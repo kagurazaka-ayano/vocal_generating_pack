@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/song_generating_pack.iml" filepath="$PROJECT_DIR$/.idea/song_generating_pack.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/vocal_generating_pack.iml" filepath="$PROJECT_DIR$/.idea/vocal_generating_pack.iml" />
     </modules>
   </component>
 </project>

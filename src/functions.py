@@ -98,7 +98,7 @@ def separate_vocal(
         clip_mode="clamp",
         jobs=os.cpu_count(),
         repo=r"../files/models/demucs/hdemucs_mmi",
-        extension="mp3"
+        extension="wav"
 ) -> dict[str, Path]:
     """
     separate the music into vocals and instruments

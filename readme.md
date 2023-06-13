@@ -18,13 +18,20 @@
      
 2. 从[Anaconda官网](https://www.anaconda.com/download/)下载anaconda或miniconda
 
-4. 安装并激活环境
+3. 安装并激活环境
     > 如果是macos, 先运行scripts中的`fix_mac_certificate_issue.sh`
+
+    windows/linux:
     ```bash
-    conda env create -f environment.yml
-    conda activate song-generating-pack
+    conda env create -f env_linux.yml
+    conda activate vocal-generating-pack
     ```
-   
+    macos:
+    ```bash
+    conda env create -f env_macos.yml
+    conda activate vocal-generating-pack
+    ```
+
 4. 手动安装pytorch依赖
     windows/linux:
     ```bash
