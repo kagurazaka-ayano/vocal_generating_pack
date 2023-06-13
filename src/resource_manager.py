@@ -49,7 +49,7 @@ def get_demucs_model(model_name, link, download_path:Path, update_cache) -> dict
 	content = requests.get(link, stream=True)
 	length = int(content.headers["content-length"])
 	print(f"Downloading {link.split('/')[-1]} ({length} bytes)")
-	with tqdm.tqdm(desc=link.split('/')[-1], total=length, unit="iB", unit_scale=True) as pbar:
+	with tqdm.tqdm_notebook(desc=link.split('/')[-1], total=length, unit="iB", unit_scale=True) as pbar:
 		with open((download_path.joinpath(model_name).joinpath(link.split('/')[-1])), "wb") as f:
 			for chunk in content.iter_content(chunk_size=1024):
 				if chunk:

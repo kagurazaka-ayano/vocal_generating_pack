@@ -11,7 +11,7 @@ from classes import DemucsGenerateParam
 from environment import *
 
 
-def convert_ncm(file_path, output_path) -> Path:
+def convert_ncm(file_path:Path, output_path:Path) -> Path:
     """
     convert NetEase ncm file to plain sound file
     :param file_path: the path of the ncm file
@@ -68,9 +68,9 @@ def convert_ncm(file_path, output_path) -> Path:
     image_size = f.read(4)
     image_size = struct.unpack('<I', bytes(image_size))[0]
     image_data = f.read(image_size)
-    file_name = f.name.split("/")[-1].split(".ncm")[0] + "." + meta_data["format"]
+    file_name = file_path.stem + "." + meta_data["format"]
     Path(output_path).mkdir(parents=True, exist_ok=True)
-    m = open(os.path.join(output_path, file_name), "wb")
+    m = open(os.path.join(output_path, file_name), "wb+")
     chunk = bytearray()
     while True:
         chunk = bytearray(f.read(0x8000))
@@ -142,8 +142,8 @@ def separate_vocal(
         conf = DemucsGenerateParam.from_list(args.copy(), extension)
         conf.get.save_as(name if name != "" else str(int(pickle.dumps(config)) ** 2))
     try:
+        args = list(filter((None).__ne__, args))
         args = args[:args.index(save_to_config)]
-        args.remove(None)
     except ValueError:
         pass
     print(args)
@@ -191,9 +191,10 @@ def apply_so_vits(input_vocal: Path,
                   chunk_seconds=0.5,
                   max_chunk_seconds=40,
                   cluster_infer_ratio=0,
+                  absolute_tresh=True,
                   save_to_config=False,
                   name="",
-                  ):
+                  ) -> Path:
     """
     :param input_vocal: the path of the extracted vocal
     :param output_path: the path of the output directory
@@ -248,7 +249,8 @@ def apply_so_vits(input_vocal: Path,
         f0_method=f0_method,
         chunk_seconds=chunk_seconds,
         max_chunk_seconds=max_chunk_seconds,
-        cluster_infer_ratio=cluster_infer_ratio
+        cluster_infer_ratio=cluster_infer_ratio,
+        absolute_thresh=absolute_tresh
     )
     return path_out
 
