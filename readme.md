@@ -35,7 +35,7 @@
 5. 手动安装pytorch依赖
     windows/linux:
     ```bash
-    pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu121
+    pip3 install --pre torch torchaudio --index-url https://download.pytorch.org/whl/nightly/cu121
     ```
     macos:
     ```bash
