@@ -1,5 +1,7 @@
 from typing import Any
 
+import tqdm
+
 from environment import demucs_model_path, so_vits_model_path, config
 from utilities import *
 import requests, huggingface_hub, re
@@ -41,14 +43,18 @@ def get_demucs_model(model_name, link, download_path:Path, update_cache) -> dict
 	"""
 	download_path.joinpath(model_name).mkdir(parents=True, exist_ok=True)
 	for j in download_path.joinpath(model_name).iterdir():
-		if link.split('/')[-1] in Path(demucs_model_path).joinpath(model_name).iterdir() and not update_cache:
+		if link.split('/')[-1] in list(Path(demucs_model_path).joinpath(model_name).iterdir()) and not update_cache:
 			print(f"{link.split('/')[-1]} already exists, skipping")
 			return {link.split('/')[-1]: j.joinpath(link.split('/')[-1]).resolve()}
 	content = requests.get(link, stream=True)
 	length = int(content.headers["content-length"])
 	print(f"Downloading {link.split('/')[-1]} ({length} bytes)")
-	with open((download_path.joinpath(model_name).joinpath(link.split('/')[-1])), "wb") as f:
-		f.write(content.content)
+	with tqdm.tqdm(desc=link.split('/')[-1], total=length, unit="iB", unit_scale=True) as pbar:
+		with open((download_path.joinpath(model_name).joinpath(link.split('/')[-1])), "wb") as f:
+			for chunk in content.iter_content(chunk_size=1024):
+				if chunk:
+					f.write(chunk)
+					pbar.update(len(chunk))
 	print(f"{link.split('/')[-1]} downloaded")
 	update_download_path("demucs", "model", model_name, link.split('/')[-1], download_path.joinpath(model_name).joinpath(link.split('/')[-1]))
 	return {link.split('/')[-1]: download_path.joinpath(model_name).resolve()}
