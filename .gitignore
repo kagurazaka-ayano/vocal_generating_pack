@@ -165,8 +165,8 @@ files/datasets
 files/models
 files/presets
 files/output
+files/sources.json
 .DS_Store
 *.th
 *.pth
 *.pt
-files/sources.json
