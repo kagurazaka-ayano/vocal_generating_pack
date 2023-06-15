@@ -255,8 +255,13 @@ def save_audio(wav: torch.Tensor,
             encoding = 'PCM_F'
         else:
             encoding = 'PCM_S'
-        ta.save(str(path), wav, sample_rate=samplerate,
-                encoding=encoding, bits_per_sample=bits_per_sample, backend=ta.list_audio_backends()[0])
+        from torch.cuda import is_available
+        if is_available():
+            ta.save(str(path), wav, sample_rate=samplerate,
+                    encoding=encoding, bits_per_sample=bits_per_sample, backend=ta.list_audio_backends()[0])
+        else:
+            ta.save(str(path), wav, sample_rate=samplerate,
+                    encoding=encoding, bits_per_sample=bits_per_sample)
     elif suffix == ".flac":
         ta.save(str(path), wav, sample_rate=samplerate, bits_per_sample=bits_per_sample, backend=ta.list_audio_backends()[0])
     else:

@@ -142,7 +142,7 @@ class AttributeDict(dict):
 		get the reference of the value indicated in the position attr if the attribute exists and is a reference type
 		:param attr: attribute pending fetch
 		:param strict: whether check the attribute exist or not
-		:param cwd: current working dict
+		:param cwd: current working dict, usually self.__dict__
 		:return: a copy of the value indicated in the position attr
 		"""
 		depth = 0

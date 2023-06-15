@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="song-generation-pack-remote" createEmptyFolders="true" uploadOnCheckin="3bc27309-e814-4b55-ab86-a4bcdc3db419" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="song-generating-pack-remote" createEmptyFolders="true" uploadOnCheckin="3bc27309-e814-4b55-ab86-a4bcdc3db419" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
-      <paths name="song-generation-pack">
+      <paths name="song-generating-pack">
         <serverdata>
           <mappings>
             <mapping deploy="/projects/song_generating_pack" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="song-generation-pack-remote">
+      <paths name="song-generating-pack-amd-remote">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/projects/vocal_generating_pack" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="song-generating-pack-remote">
         <serverdata>
           <mappings>
             <mapping deploy="/projects/song_generating_pack" local="$PROJECT_DIR$" web="/" />

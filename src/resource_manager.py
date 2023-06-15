@@ -33,9 +33,10 @@ def list_available_resources(engine_name, file_type):
 	list all available resources for a certain file_type of a engine from sources.json
 	"""
 	try:
-		return list(sources.get_attribute(f"{engine_name}.{file_type}", strict=True).keys())
+		return list(sources.get_attribute(f"{engine_name}.{file_type}", strict=True, cwd=sources.__dict__).keys())
 	except KeyError as e:
 		raise e
+
 
 def get_demucs_model(model_name, link, download_path:Path, update_cache) -> dict:
 	"""
@@ -43,14 +44,14 @@ def get_demucs_model(model_name, link, download_path:Path, update_cache) -> dict
 	"""
 	download_path.joinpath(model_name).mkdir(parents=True, exist_ok=True)
 	for j in download_path.joinpath(model_name).iterdir():
-		if link.split('/')[-1] in list(Path(demucs_model_path).joinpath(model_name).iterdir()) and not update_cache:
+		if download_path.joinpath(model_name).joinpath(link.split('/')[-1]).exists() and not update_cache:
 			print(f"{link.split('/')[-1]} already exists, skipping")
 			return {link.split('/')[-1]: j.joinpath(link.split('/')[-1]).resolve()}
 	content = requests.get(link, stream=True)
 	length = int(content.headers["content-length"])
 	print(f"Downloading {link.split('/')[-1]} ({length} bytes)")
 	with tqdm.tqdm_notebook(desc=link.split('/')[-1], total=length, unit="iB", unit_scale=True) as pbar:
-		with open((download_path.joinpath(model_name).joinpath(link.split('/')[-1])), "wb") as f:
+		with open(download_path.joinpath(model_name).joinpath(link.split('/')[-1]), "wb") as f:
 			for chunk in content.iter_content(chunk_size=1024):
 				if chunk:
 					f.write(chunk)

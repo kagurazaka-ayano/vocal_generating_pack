@@ -2,7 +2,7 @@
 <project version="4">
   <component name="SshConfigs">
     <configs>
-      <sshConfig authType="OPEN_SSH" host="home_gpu" id="9c1000c2-8ce0-44ed-a060-da9aca013d0b" port="22" nameFormat="DESCRIPTIVE" username="tsukasa" useOpenSSHConfig="true" />
+      <sshConfig authType="OPEN_SSH" host="home-server-root-remote" id="9c1000c2-8ce0-44ed-a060-da9aca013d0b" port="11556" nameFormat="DESCRIPTIVE" username="root" useOpenSSHConfig="true" />
     </configs>
   </component>
 </project>
