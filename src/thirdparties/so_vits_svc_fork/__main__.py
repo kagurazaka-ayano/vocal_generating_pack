@@ -557,6 +557,7 @@ def pre_config(
 ):
     """Preprocessing part 2: config"""
     from thirdparties.so_vits_svc_fork.preprocessing.preprocess_flist_config import preprocess_config
+
     input_dir = Path(input_dir)
     filelist_path = Path(filelist_path)
     config_path = Path(config_path)

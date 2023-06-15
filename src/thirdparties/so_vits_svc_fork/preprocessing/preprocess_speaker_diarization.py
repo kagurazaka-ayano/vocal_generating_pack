@@ -71,9 +71,9 @@ def preprocess_speaker_diarization(
     n_jobs: int = -1,
 ) -> None:
     if huggingface_token is not None and not huggingface_token.startswith("hf_"):
-        print("Huggingface token probably should start with hf_")
+        LOG.warning("Huggingface token probably should start with hf_")
     if not torch.cuda.is_available():
-        print("CUDA is not available. This will be extremely slow.")
+        LOG.warning("CUDA is not available. This will be extremely slow.")
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
     input_dir.mkdir(parents=True, exist_ok=True)

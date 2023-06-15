@@ -13,7 +13,5 @@
 	},
 	"output": "../files/output",
 	"sources": "../files/sources.json",
-	"sources_export": "../files/sources_export.json",
-	"key_path": "../files/keys",
-	"keys": {}
+	"sources_export": "../files/sources_export.json"
 }

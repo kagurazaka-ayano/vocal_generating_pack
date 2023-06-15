@@ -51,17 +51,17 @@ def preprocess_config(
         val += paths[:2]
         test += paths[-2:]
 
-    print(f"Writing {train_list_path}")
+    LOG.info(f"Writing {train_list_path}")
     train_list_path.parent.mkdir(parents=True, exist_ok=True)
     train_list_path.write_text(
         "\n".join([x.as_posix() for x in train]), encoding="utf-8"
     )
 
-    print(f"Writing {val_list_path}")
+    LOG.info(f"Writing {val_list_path}")
     val_list_path.parent.mkdir(parents=True, exist_ok=True)
     val_list_path.write_text("\n".join([x.as_posix() for x in val]), encoding="utf-8")
 
-    print(f"Writing {test_list_path}")
+    LOG.info(f"Writing {test_list_path}")
     test_list_path.parent.mkdir(parents=True, exist_ok=True)
     test_list_path.write_text("\n".join([x.as_posix() for x in test]), encoding="utf-8")
 
@@ -80,7 +80,7 @@ def preprocess_config(
     config["spk"] = spk_dict
     config["data"]["training_files"] = train_list_path.as_posix()
     config["data"]["validation_files"] = val_list_path.as_posix()
-    print(f"Writing {config_path}")
+    LOG.info(f"Writing {config_path}")
     config_path.parent.mkdir(parents=True, exist_ok=True)
     with config_path.open("w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)

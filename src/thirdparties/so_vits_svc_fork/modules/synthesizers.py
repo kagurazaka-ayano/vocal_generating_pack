@@ -127,7 +127,6 @@ class SynthesizerTrn(nn.Module):
                 "subbands": subbands,
             }
 
-
             # gen_istft_n_fft, gen_istft_hop_size, subbands
             if type_ == "istft":
                 del hps["subbands"]
