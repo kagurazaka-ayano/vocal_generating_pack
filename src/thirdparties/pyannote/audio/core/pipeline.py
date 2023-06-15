@@ -33,15 +33,15 @@ import yaml
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import RepositoryNotFoundError
 from pyannote.core.utils.helper import get_class_by_name
-from pyannote.database import FileFinder, ProtocolFile
-from pyannote.pipeline import Pipeline as _Pipeline
+from thirdparties.pyannote.database import FileFinder, ProtocolFile
+from thirdparties.pyannote.pipeline import Pipeline as _Pipeline
 
-from pyannote.audio import Audio, __version__
-from pyannote.audio.core.inference import BaseInference
-from pyannote.audio.core.io import AudioFile
-from pyannote.audio.core.model import CACHE_DIR, Model
-from pyannote.audio.utils.reproducibility import fix_reproducibility
-from pyannote.audio.utils.version import check_version
+from thirdparties.pyannote.audio import Audio, __version__
+from thirdparties.pyannote.audio.core.inference import BaseInference
+from thirdparties.pyannote.audio.core.io import AudioFile
+from thirdparties.pyannote.audio.core.model import CACHE_DIR, Model
+from thirdparties.pyannote.audio.utils.reproducibility import fix_reproducibility
+from thirdparties.pyannote.audio.utils.version import check_version
 
 PIPELINE_PARAMS_NAME = "config.yaml"
 

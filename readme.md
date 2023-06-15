@@ -9,7 +9,7 @@
 
 ## 安装
 
-nVidia显卡和CPU用户参见[环境配置](doc/environment.md)
+Nvidia显卡和CPU用户参见[环境配置](doc/environment.md)
 
 ## demo
 
