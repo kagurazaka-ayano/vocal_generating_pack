@@ -1,4 +1,6 @@
-# vocal generating pack - 一个集成了语音分离, 语音生成和语音合并的工具包
+# vocal generating pack
+
+> 一个集成了语音分离, 语音生成和语音合并的工具包
 
 ## 功能
 - 语音分离
@@ -33,7 +35,7 @@ nVidia显卡和CPU用户参见[环境配置](doc/environment.md)
 ## 使用的资源一览
 
 - [demucs(MIT)](https://github.com/facebookresearch/demucs)
-- [so-vits-svc-fork(MIT/Apache 2.0](https://github.com/voicepaw/so-vits-svc-fork)
+- [so-vits-svc-fork(MIT/Apache 2.0)](https://github.com/voicepaw/so-vits-svc-fork)
 - [原神so-vits-svc模型(MIT)](https://huggingface.co/kaze-mio/so-vits-genshin)
 - [Audio Slicer(MIT)](https://github.com/openvpi/audio-slicer)
 - [pyannote-audio(MIT)](https://github.com/pyannote/pyannote-audio)
