@@ -19,7 +19,6 @@ nVidia显卡和CPU用户参见[环境配置](doc/environment.md)
 - [ ] 分离单个音频中不同人的声音
 - [ ] Qt GUI
 - [ ] WebUI
-- [ ] Web UI
 - [ ] CLI
 - [ ] Jupyter Notebook
   - [x] Inference
