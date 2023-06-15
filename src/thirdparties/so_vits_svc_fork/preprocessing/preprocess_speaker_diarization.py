@@ -8,7 +8,7 @@ import librosa
 import soundfile as sf
 import torch
 from joblib import Parallel, delayed
-from pyannote.audio import Pipeline
+from thirdparties.audio import Pipeline
 from tqdm import tqdm
 from tqdm_joblib import tqdm_joblib
 

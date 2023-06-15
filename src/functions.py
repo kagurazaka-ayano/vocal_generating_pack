@@ -2,14 +2,19 @@ import binascii
 import struct
 import base64
 import os
+import librosa
+import soundfile
 from Crypto.Cipher import AES
 from thirdparties.demucs import separate
 from torch.cuda import is_available
-from thirdparties.so_vits_svc_fork.inference.main import infer
 from pydub import AudioSegment
+
+from thirdparties.so_vits_svc_fork.inference.main import infer
 from classes import DemucsGenerateParam
 from environment import *
-
+from thirdparties.slicer import Slicer
+from thirdparties.so_vits_svc_fork.preprocessing.preprocess_flist_config import preprocess_config
+from thirdparties.so_vits_svc_fork.preprocessing.preprocess_speaker_diarization import preprocess_speaker_diarization
 
 def convert_ncm(file_path:Path, output_path:Path) -> Path:
     """
@@ -84,7 +89,6 @@ def convert_ncm(file_path:Path, output_path:Path) -> Path:
     m.close()
     f.close()
     return Path(os.path.join(output_path, file_name))
-
 
 def separate_vocal(
         track_path: Path,
@@ -255,11 +259,18 @@ def apply_so_vits(input_vocal: Path,
     return path_out
 
 
-def fuse_vocal_and_instrumental(vocal_path: Path, instrumental_path: Path, output_path: Path, speaker: str):
+def fuse_vocal_and_instrumental(
+        vocal_path: Path,
+        instrumental_path: Path,
+        output_path: Path,
+        speaker: str,
+        extension="wav"):
     """
     :param vocal_path: the path of the vocal
     :param instrumental_path: the path of the instrumental
     :param output_path: the path of the output file
+    :param speaker: the speaker of the vocal
+    :param extension: the extension of the output file, default is wav
     """
     if not vocal_path.exists():
         raise FileNotFoundError(f"File {vocal_path} not found")
@@ -269,11 +280,23 @@ def fuse_vocal_and_instrumental(vocal_path: Path, instrumental_path: Path, outpu
     vocal = AudioSegment.from_file(vocal_path)
     instrumental = AudioSegment.from_file(instrumental_path)
     out = vocal.overlay(instrumental)
-    out.export(output_path / Path(vocal_path.stem + f"_counterfeited_by_{speaker}.wav").name, format="wav")
-    return output_path / Path(vocal_path.stem + f"_counterfeited_from_{speaker}.wav").name
+    out.export(output_path / Path(vocal_path.stem + f"_counterfeited_from_{speaker}." + extension.strip(".")).name, format=extension)
+    while not Path(output_path / Path(vocal_path.stem + f"_counterfeited_from_{speaker}." + extension.strip(".")).name).exists():
+        print(output_path / Path(vocal_path.stem + f"_counterfeited_from_{speaker}." + extension.strip(".")).name)
+    print("done")
+    return output_path / Path(vocal_path.stem + f"_counterfeited_from_{speaker}." + extension.strip(".")).name
 
 
-def resample(input_path: Path, output_path: Path, sample_rate: int):
+def extract_video_audio(video_path: Path, dir_out: Path, desired_sample_rate=None) -> Path:
+    dir_out.mkdir(parents=True, exist_ok=True)
+    cmd = f"ffmpeg -hide_banner -i {video_path} {dir_out / f'{video_path.stem}_audio.wav '} -y"
+    os.system(cmd)
+    while not (dir_out / f"{video_path.stem}_audio.wav").exists():
+        pass
+    return dir_out / f"{video_path.stem}_audio.wav"
+
+
+def resample(input_path: Path, output_path: Path, sample_rate: int=44100):
     """
     :param input_path: the path of the input file
     :param output_path: the path of the output file
@@ -283,8 +306,122 @@ def resample(input_path: Path, output_path: Path, sample_rate: int):
     if not input_path.exists():
         raise FileNotFoundError(f"File {input_path} not found")
     output_path.mkdir(parents=True, exist_ok=True)
-    cmd = f"ffmpeg -i {input_path} -ar {sample_rate} {output_path / Path(input_path.name).name}"
-    os.system(cmd)
-    return output_path / Path(input_path.name).name
+    audio = AudioSegment.from_file(input_path)
+    audio = audio.set_frame_rate(sample_rate)
+    audio.export(output_path.joinpath(f"{input_path.stem}_resampled_{sample_rate}{input_path.suffix}").resolve(), format=input_path.suffix.strip("."))
+    return output_path.joinpath(f"{input_path.stem}_resampled_{sample_rate}{input_path.suffix}").resolve()
 
+
+def separate_speaker(
+        input_path: Path,
+        path_out: Path,
+        sr: int = 44100,
+        min_speaker:int = 1,
+        max_speaker:int = 1,
+        huggingface_token: str = config["keys"]["huggingface_auth"]
+) -> Path:
+    input_path = Path(input_path)
+    path_out = Path(path_out)
+    if not input_path.exists():
+        raise FileNotFoundError(f"File {input_path} not found")
+    if not path_out.exists():
+        path_out.mkdir(parents=True, exist_ok=True)
+    path_out.joinpath(input_path.stem).mkdir(parents=True, exist_ok=True)
+    preprocess_speaker_diarization(
+        input_path if input_path.is_dir() else input_path.parent,
+        path_out.joinpath(input_path.stem),
+        sr,
+        min_speakers=min_speaker,
+        max_speakers=max_speaker,
+        huggingface_token=huggingface_token
+    )
+    return path_out.joinpath(input_path.stem)
+
+
+def slice_audio(
+        input_path: Path,
+        path_out: Path = None,
+        db_threshold: float = -40,
+        min_len_ms: int = 1000,
+        min_silence_interval_ms: int = 300,
+        hop_length_ms: int = 10,
+        max_silence_len_ms: int = 500,
+        extension: str = "wav",
+        desired_samplerate:int = 44100
+) -> Path:
+    """
+    :param input_path: the path of the input file
+    :param path_out: the path of the output directory, default is [the path you defined in the config]/sliced
+    :param db_threshold: the db threshold for silence detection in ms, default is -40
+    :param min_len_ms: the min length of each slice in ms, default is 1000
+    :param min_silence_interval_ms: the min silence interval in ms, default is 300
+    :param hop_length_ms: the frame in ms, default is 10
+    :param max_silence_len_ms: the max silence length in ms, default is 500
+    :param extension: the extension of the output file, default is wav
+    :param desired_samplerate: the desired sample rate of the output file, default is 44100
+    """
+    if path_out is None:
+        path_out = so_vits_dataset_path.joinpath(input_path.stem).joinpath("sliced")
+    if not input_path.exists():
+        raise FileNotFoundError(f"File {input_path} not found")
+    if librosa.get_samplerate(input_path) != desired_samplerate:
+        t = resample(input_path, Path(input_path.stem + f"_resampled_{desired_samplerate}" + input_path.suffix), desired_samplerate)
+        os.remove(input_path)
+        input_path = t
+    path_out.mkdir(parents=True, exist_ok=True)
+    audio, sr = librosa.load(input_path, sr=None)
+    slicer = Slicer(
+        sr=sr,
+        threshold=db_threshold,
+        min_length=min_len_ms,
+        min_interval=min_silence_interval_ms,
+        hop_size=hop_length_ms,
+        max_sil_kept=max_silence_len_ms
+    )
+    chunks = slicer.slice(audio)
+    for i, chunk in enumerate(chunks):
+        if len(chunk.shape) > 1:
+            chunk = chunk.T
+        soundfile.write(path_out.joinpath(input_path.stem + f"_{i}th_slice" + f".{extension}"), chunk, sr)
+    return path_out
+
+def generate_config(
+        sliced_path: Path,
+        train_data_path: Path = None,
+        val_data_path: Path = None,
+        test_data_path: Path = None,
+        config_file_path: Path = None,
+        config_name: str = "config.json"
+):
+    """
+    :param sliced_path: the path to the separated dataset folder
+    :param train_data_path: the output path of training dataset
+    :param val_data_path: the output path of validation dataset
+    :param test_data_path: the output path of testing dataset
+    :param config_file_path: the path of the output config file
+    :param config_name: the name of the output config file
+    """
+    if train_data_path is None:
+        train_data_path = so_vits_dataset_path.joinpath(sliced_path.stem).joinpath("train")
+        train_data_path.mkdir(parents=True, exist_ok=True)
+    if val_data_path is None:
+        val_data_path = so_vits_dataset_path.joinpath(sliced_path.stem).joinpath("val")
+        val_data_path.mkdir(parents=True, exist_ok=True)
+    if test_data_path is None:
+        test_data_path = so_vits_dataset_path.joinpath(sliced_path.stem).joinpath("test")
+        test_data_path.mkdir(parents=True, exist_ok=True)
+    if config_file_path is None:
+        config_file_path = so_vits_dataset_path.joinpath(sliced_path.stem).joinpath(config_name)
+        so_vits_dataset_path.joinpath(sliced_path.stem).joinpath(config_name).touch(exist_ok=True)
+
+    preprocess_config(sliced_path, train_data_path, val_data_path, test_data_path, config_file_path, config_name)
+
+    return {"train": train_data_path, "val": val_data_path, "test": test_data_path, "config": config_file_path}
+
+
+audio_from_video = extract_video_audio(Path("./test/2023-06-14_19-06-15.mp4"), Path("./test/extracted/"))
+resampled = resample(audio_from_video, Path("./test/resampled/"), 44100)
+separate_vocal(resampled, Path("./test/separated/"))
+input()
+preprocess_speaker_diarization(Path("./test/"), Path("./test/"), 44100)
 

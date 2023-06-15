@@ -1,10 +1,7 @@
-from typing import Any
-
 import tqdm
-
-from environment import demucs_model_path, so_vits_model_path, config
+from environment import demucs_model_path, so_vits_model_path, pyannote_model_path, config
 from utilities import *
-import requests, huggingface_hub, re
+import requests
 
 
 def get_data_from_source(engine_name: str, file_type: str, file_name: str, update_cache=False):
@@ -13,15 +10,17 @@ def get_data_from_source(engine_name: str, file_type: str, file_name: str, updat
 	"""
 	download_result = {}
 	try:
-		model_download_data_list = sources.get_attribute(f"{engine_name}.{file_type}.{file_name}.link", sources, strict=True)
+		model_download_data_list = sources.get_attribute(f"{engine_name}.{file_type}.{file_name}", sources, strict=True)
 	except KeyError as e:
 		raise e
 	for i in model_download_data_list:
 		match engine_name:
 			case "demucs":
-				download_result.update(get_demucs_model(model_name=file_name, link=i, download_path=demucs_model_path, update_cache=update_cache))
+				download_result.update(get_demucs_model(model_name=file_name, link=i["link"], download_path=demucs_model_path, update_cache=update_cache, auth=i["auth"]))
 			case "so-vits":
-				download_result.update(get_so_vits_model(model_name=file_name, link=i, download_path=so_vits_model_path, update_cache=update_cache))
+				download_result.update(get_so_vits_model(model_name=file_name, link=i["link"], download_path=so_vits_model_path, update_cache=update_cache, auth=i["auth"]))
+			case "pyannote":
+				download_result.update(get_pyannote_model(model_name=file_name, link=i["link"], download_path=pyannote_model_path, update_cache=update_cache, auth=i["auth"]))
 			case _:
 				print(f"engine {engine_name} not supported, skipping")
 
@@ -37,7 +36,8 @@ def list_available_resources(engine_name, file_type):
 	except KeyError as e:
 		raise e
 
-def get_demucs_model(model_name, link, download_path:Path, update_cache) -> dict:
+
+def get_demucs_model(model_name:str, link:str, download_path:Path, update_cache:bool, auth:dict) -> dict:
 	"""
 	get demucs demo_assets from config.json
 	"""
@@ -60,71 +60,30 @@ def get_demucs_model(model_name, link, download_path:Path, update_cache) -> dict
 	return {link.split('/')[-1]: download_path.joinpath(model_name).resolve()}
 
 
-def get_so_vits_model(model_name, download_path:Path, link, update_cache=True):
+def get_so_vits_model(model_name, download_path:Path, link:str, auth:dict, update_cache=True) -> dict:
 	"""
 	get so-vits-svc demo_assets from sources.json
 	"""
-	ret = {}
+
 	download_path.joinpath(model_name).mkdir(parents=True, exist_ok=True)
 	if link.startswith("https://cowtransfer.com/"):
-		ret = get_cow_transfer_model(model_name, link, download_path)
+		return get_cow_transfer_model(model_name, link, download_path)
 	elif link.startswith("https://huggingface.co/"):
-		ret = get_hugging_face_model(model_name, link, download_path, update_cache)
+		return get_hugging_face_model(model_name, link, download_path, update_cache)
 	else:
 		print(f"unknown model source {link}, currently only support cow transfer and huggingface")
 		return {}
-	return ret
-
-def get_cow_transfer_model(name, value, download_path):
-	download_path.joinpath(name).mkdir(parents=True, exist_ok=True)
-	archive_supported = ("gz", "gzip", "zip", "tar", "rar", "7z")
-	meta = cow_transfer_metadata(value["link"])
-	ans = {}
-	if meta["code"] != 200:
-		print(f"cannot fetch metadata of {name}, skipping")
-		return {}
-	print(f"Downloading {name} ({meta['data']['file_size']})")
-	content = requests.get(meta["data"]["download_link"], stream=True)
-	local_path = Path(download_path.joinpath(name).joinpath(meta["data"]["file_name"] + "." + meta["data"]["file_format"]))
-	with open(local_path, "wb") as f:
-		f.write(content.content)
-	print(f"Downloaded {name}")
-	print(f"Extracting {name}")
-	filetype = guess_extension(str(local_path))
-	match filetype:
-		case "gz", "gzip":
-			extracted_path = extract_gz(local_path)
-			if extracted_path.suffix == ".tar":
-				extract_tar(extracted_path)
-		case "zip":
-			extract_zip(local_path)
-		case "tar":
-			extract_tar(local_path)
-		case "rar":
-			extract_rar(local_path)
-		case "7z":
-			extract_7z(local_path)
-		case _:
-			print(f"cannot extract {name}, supported file format: {archive_supported}, skipping")
-			return {}
-	print(f"Extracted {name}")
-	os.remove(local_path)
-	update_download_path_dict("so-vits", "model", name, dict(
-		zip([i.name for i in download_path.joinpath(name).iterdir()],
-			[j.resolve() for j in download_path.joinpath(name).iterdir()])))
-	return dict(zip([i.name for i in download_path.joinpath(name).iterdir()], [j.resolve() for j in download_path.joinpath(name).iterdir()]))
 
 
-def get_hugging_face_model(name, value, download_path, update_cache=True) -> dict[Any, Any]:
-	download_path.mkdir(parents=True, exist_ok=True)
-	pattern = r"https:\/\/huggingface\.co\/([-\w.]+)\/([\w.-]+)\/?"
-	match = re.match(pattern, value)
-	repo_id = match.group(1) + "/" + match.group(2).strip("/")
-	local_cache_path = Path(huggingface_hub.snapshot_download(repo_id, allow_patterns=["*.pt", "*.pth", "*.json"], force_download=update_cache))
-	move_file(local_cache_path, download_path.joinpath(name))
-	for k, l in zip([i.name for i in download_path.joinpath(name).iterdir()], [j.resolve() for j in download_path.joinpath(name).iterdir()]):
-		update_download_path("so-vits", "model", name, k, l)
-	return dict(zip([i.name for i in download_path.joinpath(name).iterdir()], [j.resolve() for j in download_path.joinpath(name).iterdir()]))
+def get_pyannote_model(model_name: str, link: str, download_path: Path, update_cache: bool, auth: dict) -> dict:
+	"""
+	get pyannote model from sources.json
+	"""
+	ret = {}
+	download_path.joinpath(model_name).mkdir(parents=True, exist_ok=True)
+	if link.startswith("https://huggingface.co/"):
+		return get_so_vits_model(model_name, download_path, link, auth, update_cache)
+
 
 
 def export_sources(ignore_private:bool=False):
@@ -146,7 +105,7 @@ def export_sources(ignore_private:bool=False):
 	json.dump(ans, open(config["sources_export"], "w+"), indent=4)
 
 
-def download_all_models(update_cache=False):
+def get_all_models(update_cache=False):
 	"""
 	download all models from sources.json
 	"""
@@ -165,5 +124,5 @@ def get_all_resources(update_cache=False):
 	"""
 	get all resources from sources.json
 	"""
-	download_all_models(update_cache=update_cache)
+	get_all_models(update_cache=update_cache)
 

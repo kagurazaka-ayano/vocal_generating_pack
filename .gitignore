@@ -160,13 +160,14 @@ cython_debug/
 #.idea/
 
 
-# models and presets
+# models, presets and keys
 files/datasets
 files/models
 files/presets
 files/output
 files/sources.json
 files/keys
+src/test
 .DS_Store
 *.th
 *.pth

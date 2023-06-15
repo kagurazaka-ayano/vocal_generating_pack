@@ -37,11 +37,11 @@
 5. 安装pytorch
     windows/linux:
     ```bash
-    pip3 install --pre torch torchaudio --index-url https://download.pytorch.org/whl/nightly/cu121
+    pip3 install --upgrade --force-reinstall --pre torch torchaudio --index-url https://download.pytorch.org/whl/nightly/cu121
     ```
     macos:
     ```bash
-    pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
+    pip3 install --upgrade --force-reinstall --pre torch torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
     ```
    
 6. 如果你想要训练模型, 安装pyannote-audio:

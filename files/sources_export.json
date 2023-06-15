@@ -3,6 +3,7 @@
         "model": {
             "hdemucs_mmi": {
                 "private": false,
+                "auth": {},
                 "link": [
                     "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/hdemucs_mmi.yaml",
                     "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/75fc33f5-1941ce65.th"
@@ -11,6 +12,7 @@
             },
             "htdemucs_6s": {
                 "private": false,
+                "auth": {},
                 "link": [
                     "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/htdemucs_6s.yaml",
                     "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/5c90dfd2-34c22ccb.th"
@@ -23,6 +25,7 @@
         "model": {
             "Pretrained": {
                 "private": false,
+                "auth": {},
                 "link": [
                     "https://huggingface.co/therealvul/so-vits-svc-4.0-init/"
                 ],
@@ -30,6 +33,7 @@
             },
             "AzumaSeren": {
                 "private": false,
+                "auth": {},
                 "link": [
                     "https://cowtransfer.com/s/f35da9843a1641"
                 ],
@@ -37,6 +41,7 @@
             },
             "AbeShinzo": {
                 "private": false,
+                "auth": {},
                 "link": [
                     "https://huggingface.co/AbeShinzo0708/so_vits_svc4_AbeShinzo/"
                 ],
@@ -44,13 +49,15 @@
             },
             "genshin": {
                 "private": false,
+                "auth": {},
                 "link": [
                     "https://huggingface.co/kaze-mio/so-vits-genshin/tree/main/nahida"
                 ],
                 "local": {}
             },
             "hololive": {
-                "private": false,
+                "private": {},
+                "auth": {},
                 "link": [
                     "https://huggingface.co/megaaziib/hololivemix-so-vits-svc-4.0/tree/main"
                 ],
@@ -58,10 +65,24 @@
             },
             "tokai-teio": {
                 "private": false,
+                "auth": {},
                 "link": [
                     "https://huggingface.co/Kree/so-vits-svc4.0-Tokai-Teio/tree/main/Tokai-Teio"
                 ],
                 "local": {}
+            }
+        }
+    },
+    "pyannote": {
+        "model": {
+            "speaker-diarization": {
+                "private": false,
+                "auth": {
+                    "huggingface": "huggingface_auth"
+                },
+                "link": [
+                    "https://huggingface.co/pyannote/speaker-diarization/tree/main"
+                ]
             }
         }
     }

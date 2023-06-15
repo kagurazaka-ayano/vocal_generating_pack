@@ -11,7 +11,10 @@ from filetype import guess_extension
 from environment import sources, sources_path, update_env
 import json
 import shutil
-
+import re
+import requests
+import huggingface_hub
+from typing import Any
 
 
 def cow_transfer_metadata(link: str) -> dict:
@@ -89,6 +92,62 @@ def flush_sources_cache(remove_file=True, current_layer: dict = sources):
 		elif isinstance(i, dict):
 			flush_sources_cache(remove_file, i)
 	json.dump(sources, open(sources_path, "w+"), indent=4)
+
+
+def get_cow_transfer_model(name, value, download_path, auth:dict={}):
+	download_path.joinpath(name).mkdir(parents=True, exist_ok=True)
+	archive_supported = ("gz", "gzip", "zip", "tar", "rar", "7z")
+	meta = cow_transfer_metadata(value["link"])
+	ans = {}
+	if meta["code"] != 200:
+		print(f"cannot fetch metadata of {name}, skipping")
+		return {}
+	print(f"Downloading {name} ({meta['data']['file_size']})")
+	content = requests.get(meta["data"]["download_link"], stream=True)
+	local_path = Path(
+		download_path.joinpath(name).joinpath(meta["data"]["file_name"] + "." + meta["data"]["file_format"]))
+	with open(local_path, "wb") as f:
+		f.write(content.content)
+	print(f"Downloaded {name}")
+	print(f"Extracting {name}")
+	filetype = guess_extension(str(local_path))
+	match filetype:
+		case "gz", "gzip":
+			extracted_path = extract_gz(local_path)
+			if extracted_path.suffix == ".tar":
+				extract_tar(extracted_path)
+		case "zip":
+			extract_zip(local_path)
+		case "tar":
+			extract_tar(local_path)
+		case "rar":
+			extract_rar(local_path)
+		case "7z":
+			extract_7z(local_path)
+		case _:
+			print(f"cannot extract {name}, supported file format: {archive_supported}, skipping")
+			return {}
+	print(f"Extracted {name}")
+	os.remove(local_path)
+	update_download_path_dict("so-vits", "model", name, dict(
+		zip([i.name for i in download_path.joinpath(name).iterdir()],
+			[j.resolve() for j in download_path.joinpath(name).iterdir()])))
+	return dict(zip([i.name for i in download_path.joinpath(name).iterdir()],
+					[j.resolve() for j in download_path.joinpath(name).iterdir()]))
+
+def get_hugging_face_model(name, value, download_path, update_cache=True, auth:dict={}) -> dict[Any, Any]:
+	download_path.mkdir(parents=True, exist_ok=True)
+	pattern = r"https:\/\/huggingface\.co\/([-\w.]+)\/([\w.-]+)\/?"
+	match = re.match(pattern, value)
+	repo_id = match.group(1) + "/" + match.group(2).strip("/")
+	local_cache_path = Path(huggingface_hub.snapshot_download(repo_id, allow_patterns=["*.pt", "*.pth", "*.json"],
+															  force_download=update_cache, token=auth.get("huggingface", None)))
+	move_file(local_cache_path, download_path.joinpath(name))
+	for k, l in zip([i.name for i in download_path.joinpath(name).iterdir()],
+					[j.resolve() for j in download_path.joinpath(name).iterdir()]):
+		update_download_path("so-vits", "model", name, k, l)
+	return dict(zip([i.name for i in download_path.joinpath(name).iterdir()],
+					[j.resolve() for j in download_path.joinpath(name).iterdir()]))
 
 
 def export_sources():
