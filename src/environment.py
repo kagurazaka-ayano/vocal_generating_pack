@@ -26,7 +26,6 @@ if not config_path.exists():
 		"sources_export": "../files/sources_export.json",
 		"key_path": "../files/keys",
 		"keys": {}
-
 	}
 	''')
 
@@ -38,7 +37,6 @@ demucs_preset_path = Path(config["preset"]["demucs"]).resolve()
 demucs_dataset_path = Path(config["dataset"]["demucs"]).resolve()
 so_vits_preset_path = Path(config["preset"]["so-vits"]).resolve()
 so_vits_dataset_path = Path(config["dataset"]["so-vits"]).resolve()
-pyannote_model_path = Path(config["model"]["pyannote"]).resolve()
 output_path = Path(config["output"]).resolve()
 key_path = Path(config["key_path"]).resolve()
 

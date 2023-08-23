@@ -19,8 +19,8 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 
-import so_vits_svc_fork.modules.commons as commons
-import so_vits_svc_fork.utils
+import thirdparties.so_vits_svc_fork.modules.commons as commons
+import thirdparties.so_vits_svc_fork.utils
 
 from . import utils
 from .dataset import TextAudioCollate, TextAudioDataset

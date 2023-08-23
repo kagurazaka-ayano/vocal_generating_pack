@@ -11,6 +11,8 @@
 
 Nvidia显卡和CPU用户参见[环境配置](doc/environment.md)
 
+AMD显卡用户请遗憾离场, 目前不支持AMD显卡
+
 ## demo
 
 在配置好环境以后使用Jupyter notebook运行[src/demo.ipynb](src/demo.ipynb)即可, 目前里面包含了一个简单的inference流程和6首demo歌曲

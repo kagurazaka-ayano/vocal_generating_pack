@@ -8,13 +8,16 @@ from Crypto.Cipher import AES
 from thirdparties.demucs import separate
 from torch.cuda import is_available
 from pydub import AudioSegment
+from tqdm import tqdm
+
 
 from thirdparties.so_vits_svc_fork.inference.main import infer
 from classes import DemucsGenerateParam
 from environment import *
 from thirdparties.slicer import Slicer
 from thirdparties.so_vits_svc_fork.preprocessing.preprocess_flist_config import preprocess_config
-from thirdparties.so_vits_svc_fork.preprocessing.preprocess_speaker_diarization import preprocess_speaker_diarization
+from pyannote.audio import Pipeline
+from df.enhance import enhance, init_df, load_audio, save_audio
 
 def convert_ncm(file_path:Path, output_path:Path) -> Path:
     """
@@ -312,12 +315,29 @@ def resample(input_path: Path, output_path: Path, sample_rate: int=44100):
     return output_path.joinpath(f"{input_path.stem}_resampled_{sample_rate}{input_path.suffix}").resolve()
 
 
-def separate_speaker(
+def denoise(input_path: Path, path_out: Path, sample_rate: int=44100):
+    """
+    :param input_path: the path of the input file
+    :param output_path: the path of the output file
+    :param sample_rate: the sample rate of the output file
+    :return: the path of the output file
+    """
+    if not input_path.exists():
+        raise FileNotFoundError(f"File {input_path} not found")
+    output_path.mkdir(parents=True, exist_ok=True)
+    model, df_state, _ = init_df()
+    audio, _ = load_audio(str(input_path.resolve()), sr=sample_rate)
+    denosied_audio = enhance(model, df_state, audio)
+    save_audio(str(output_path.joinpath(f"{input_path.stem}_denoised_{sample_rate}{input_path.suffix}").resolve()), denosied_audio, sample_rate)
+    return output_path.joinpath(f"{input_path.stem}_denoised_{sample_rate}{input_path.suffix}").resolve()
+
+
+def extract_speaker(
         input_path: Path,
         path_out: Path,
-        sr: int = 44100,
-        min_speaker:int = 1,
-        max_speaker:int = 1,
+        sr:int = 44100,
+        min_speaker: int = 1,
+        max_speaker: int = 1,
         huggingface_token: str = config["keys"]["huggingface_auth"]
 ) -> Path:
     input_path = Path(input_path)
@@ -327,14 +347,23 @@ def separate_speaker(
     if not path_out.exists():
         path_out.mkdir(parents=True, exist_ok=True)
     path_out.joinpath(input_path.stem).mkdir(parents=True, exist_ok=True)
-    preprocess_speaker_diarization(
-        input_path if input_path.is_dir() else input_path.parent,
-        path_out.joinpath(input_path.stem),
-        sr,
-        min_speakers=min_speaker,
-        max_speakers=max_speaker,
-        huggingface_token=huggingface_token
-    )
+    audio = librosa.load(input_path, sr, mono=False)
+    pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization", use_auth_token=huggingface_token)
+    diarization = pipeline(input_path, min_speaker=min_speaker, max_speaker=max_speaker)
+    speaker_count = {}
+    for segment, track, speaker in tqdm(
+        list(diarization.itertracks(yield_label=True)), desc="separating"
+    ):
+        if segment.end - segment.start < 1:
+            continue
+        speaker_count[speaker] += 1
+        audio_cut = audio[int(segment.start * sr): int(segment.end * sr)]
+        soundfile.write(
+            output_path.joinpath(input_path.stem) / f"{speaker}_{speaker_count[speaker]}.wav",
+            audio_cut,
+            sr
+        )
+
     return path_out.joinpath(input_path.stem)
 
 
@@ -369,7 +398,7 @@ def slice_audio(
         os.remove(input_path)
         input_path = t
     path_out.mkdir(parents=True, exist_ok=True)
-    audio, sr = librosa.load(input_path, sr=None)
+    audio, sr = librosa.load(input_path, sr=None, mono=False)
     slicer = Slicer(
         sr=sr,
         threshold=db_threshold,
@@ -421,7 +450,8 @@ def generate_config(
 
 audio_from_video = extract_video_audio(Path("./test/2023-06-14_19-06-15.mp4"), Path("./test/extracted/"))
 resampled = resample(audio_from_video, Path("./test/resampled/"), 44100)
-separate_vocal(resampled, Path("./test/separated/"))
-input()
-preprocess_speaker_diarization(Path("./test/"), Path("./test/"), 44100)
+denoised = denoise(resampled, Path("./test/denoised/"))
+separated = separate_vocal(denoised, Path("./test/separated/"))
+extracted = extract_speaker(separated["vocal"], Path("./test/extracted/"), max_speaker=2, min_speaker=2)
+print(extracted)
 

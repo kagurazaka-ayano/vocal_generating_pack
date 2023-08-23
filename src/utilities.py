@@ -15,6 +15,7 @@ import re
 import requests
 import huggingface_hub
 from typing import Any
+import yaml
 
 
 def cow_transfer_metadata(link: str) -> dict:
@@ -94,7 +95,7 @@ def flush_sources_cache(remove_file=True, current_layer: dict = sources):
 	json.dump(sources, open(sources_path, "w+"), indent=4)
 
 
-def get_cow_transfer_model(name, value, download_path, auth:dict={}):
+def get_cow_transfer_file(name, value, download_path, engine, type, auth:dict={}):
 	download_path.joinpath(name).mkdir(parents=True, exist_ok=True)
 	archive_supported = ("gz", "gzip", "zip", "tar", "rar", "7z")
 	meta = cow_transfer_metadata(value["link"])
@@ -129,25 +130,27 @@ def get_cow_transfer_model(name, value, download_path, auth:dict={}):
 			return {}
 	print(f"Extracted {name}")
 	os.remove(local_path)
-	update_download_path_dict("so-vits", "model", name, dict(
+	update_download_path_dict(engine, type, name, dict(
 		zip([i.name for i in download_path.joinpath(name).iterdir()],
 			[j.resolve() for j in download_path.joinpath(name).iterdir()])))
 	return dict(zip([i.name for i in download_path.joinpath(name).iterdir()],
 					[j.resolve() for j in download_path.joinpath(name).iterdir()]))
 
-def get_hugging_face_model(name, value, download_path, update_cache=True, auth:dict={}) -> dict[Any, Any]:
+
+def get_hugging_face_file(name, value, download_path, engine:str, type:str, patterns:list, update_cache=True, auth:dict={}, revision=None) -> dict[Any, Any]:
 	download_path.mkdir(parents=True, exist_ok=True)
 	pattern = r"https:\/\/huggingface\.co\/([-\w.]+)\/([\w.-]+)\/?"
 	match = re.match(pattern, value)
 	repo_id = match.group(1) + "/" + match.group(2).strip("/")
-	local_cache_path = Path(huggingface_hub.snapshot_download(repo_id, allow_patterns=["*.pt", "*.pth", "*.json"],
+	local_cache_path = Path(huggingface_hub.snapshot_download(repo_id, allow_patterns=patterns,
 															  force_download=update_cache, token=auth.get("huggingface", None)))
 	move_file(local_cache_path, download_path.joinpath(name))
 	for k, l in zip([i.name for i in download_path.joinpath(name).iterdir()],
 					[j.resolve() for j in download_path.joinpath(name).iterdir()]):
-		update_download_path("so-vits", "model", name, k, l)
+		update_download_path(engine, type, name, k, l)
 	return dict(zip([i.name for i in download_path.joinpath(name).iterdir()],
 					[j.resolve() for j in download_path.joinpath(name).iterdir()]))
+
 
 
 def export_sources():

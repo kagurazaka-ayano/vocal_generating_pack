@@ -72,18 +72,5 @@
                 "local": {}
             }
         }
-    },
-    "pyannote": {
-        "model": {
-            "speaker-diarization": {
-                "private": false,
-                "auth": {
-                    "huggingface": "huggingface_auth"
-                },
-                "link": [
-                    "https://huggingface.co/pyannote/speaker-diarization/tree/main"
-                ]
-            }
-        }
     }
 }

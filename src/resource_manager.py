@@ -2,6 +2,9 @@ import tqdm
 from environment import demucs_model_path, so_vits_model_path, pyannote_model_path, config
 from utilities import *
 import requests
+from thirdparties.pyannote.core.utils.helper import get_class_by_name
+from thirdparties.pyannote.audio import __version__ as pyannote_version
+
 
 
 def get_data_from_source(engine_name: str, file_type: str, file_name: str, update_cache=False):
@@ -19,8 +22,6 @@ def get_data_from_source(engine_name: str, file_type: str, file_name: str, updat
 				download_result.update(get_demucs_model(model_name=file_name, link=i["link"], download_path=demucs_model_path, update_cache=update_cache, auth=i["auth"]))
 			case "so-vits":
 				download_result.update(get_so_vits_model(model_name=file_name, link=i["link"], download_path=so_vits_model_path, update_cache=update_cache, auth=i["auth"]))
-			case "pyannote":
-				download_result.update(get_pyannote_model(model_name=file_name, link=i["link"], download_path=pyannote_model_path, update_cache=update_cache, auth=i["auth"]))
 			case _:
 				print(f"engine {engine_name} not supported, skipping")
 
@@ -67,22 +68,12 @@ def get_so_vits_model(model_name, download_path:Path, link:str, auth:dict, updat
 
 	download_path.joinpath(model_name).mkdir(parents=True, exist_ok=True)
 	if link.startswith("https://cowtransfer.com/"):
-		return get_cow_transfer_model(model_name, link, download_path)
+		return get_cow_transfer_file(model_name, link, download_path,"model","so-vits")
 	elif link.startswith("https://huggingface.co/"):
-		return get_hugging_face_model(model_name, link, download_path, update_cache)
+		return get_hugging_face_file(model_name, link, download_path, "so-vits", "model", ["*.pt", "*.pth", "*.json"], update_cache, auth)
 	else:
 		print(f"unknown model source {link}, currently only support cow transfer and huggingface")
 		return {}
-
-
-def get_pyannote_model(model_name: str, link: str, download_path: Path, update_cache: bool, auth: dict) -> dict:
-	"""
-	get pyannote model from sources.json
-	"""
-	ret = {}
-	download_path.joinpath(model_name).mkdir(parents=True, exist_ok=True)
-	if link.startswith("https://huggingface.co/"):
-		return get_so_vits_model(model_name, download_path, link, auth, update_cache)
 
 
 
